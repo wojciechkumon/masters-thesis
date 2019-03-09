@@ -1,23 +1,15 @@
 \documentclass[11pt]{aghdpl}
-% \documentclass[en,11pt]{aghdpl}  % praca w języku angielskim
-
-% Lista wszystkich języków stanowiących języki pozycji bibliograficznych użytych w pracy.
-% (Zgodnie z zasadami tworzenia bibliografii każda pozycja powinna zostać utworzona zgodnie z zasadami języka, w którym dana publikacja została napisana.)
 \usepackage[english,polish]{babel}
 
-% Użyj polskiego łamania wyrazów (zamiast domyślnego angielskiego).
 \usepackage{polski}
 
 \usepackage[utf8]{inputenc}
 
-% dodatkowe pakiety
 
 \usepackage{mathtools}
 \usepackage{amsfonts}
 \usepackage{amsmath}
 \usepackage{amsthm}
-
-% --- < bibliografia > ---
 
 \usepackage[
 style=numeric,
@@ -51,10 +43,6 @@ backend=bibtex
 %\AtEveryBibitem{\clearfield{note}}
 
 
-% ------------------------
-% --- < listingi > ---
-
-% Użyj czcionki kroju Courier.
 \usepackage{courier}
 
 \usepackage{listings}
@@ -82,15 +70,11 @@ backend=bibtex
 	basicstyle=\footnotesize\ttfamily,
 }
 
-% ------------------------
-
 \AtBeginDocument{
 	\renewcommand{\tablename}{Tabela}
 	\renewcommand{\figurename}{Rys.}
 }
 
-% ------------------------
-% --- < tabele > ---
 
 \usepackage{array}
 \usepackage{tabularx}
@@ -99,7 +83,6 @@ backend=bibtex
 \usepackage{makecell}
 \usepackage[flushleft]{threeparttable}
 
-% defines the X column to use m (\parbox[c]) instead of p (`parbox[t]`)
 \newcolumntype{C}[1]{>{\hsize=#1\hsize\centering\arraybackslash}X}
 
 
@@ -111,36 +94,26 @@ backend=bibtex
 %\titlePL{Przygotowanie bardzo długiej i pasjonującej pracy dyplomowej w~systemie~\LaTeX}
 %\titleEN{Preparation of a very long and fascinating bachelor or master thesis in \LaTeX}
 
-\titlePL{Przygotowanie pracy dyplomowej w~systemie~\LaTeX}
-\titleEN{Thesis in \LaTeX}
+\titlePL{Implementacja algorytmu weryfikacji modelowej własności LTL w środowisku rozproszonym}
+\titleEN{Implementation of the distributed LTL model checking algorithm}
 
 
-\shorttitlePL{Przygotowanie pracy dyplomowej w~systemie \LaTeX} % skrócona wersja tytułu jeśli jest bardzo długi
-\shorttitleEN{Preparation of a long and fascinating thesis in \LaTeX}
+\shorttitlePL{Implementacja algorytmu weryfikacji modelowej własności LTL w środowisku rozproszonym}
+\shorttitleEN{Implementation of the distributed LTL model checking algorithm}
 
 \thesistype{Praca dyplomowa magisterska}
-%\thesistype{Master of Science Thesis}
 
 \supervisor{prof. dr hab. Marcin Szpyrka}
-%\supervisor{Marcin Szpyrka PhD, DSc}
-
 \degreeprogramme{Informatyka}
-%\degreeprogramme{Computer Science}
-
-\date{2015}
-
+\date{2019}
 \department{Katedra Informatyki Stosowanej}
-%\department{Department of Applied Computer Science}
-
 \faculty{Wydział Elektrotechniki, Automatyki,\protect\\[-1mm] Informatyki i Inżynierii Biomedycznej}
-%\faculty{Faculty of Electrical Engineering, Automatics, Computer Science and Biomedical Engineering}
 
 \acknowledgements{Serdecznie dziękuję \dots tu ciąg dalszych podziękowań np. dla promotora, żony, sąsiada itp.}
 
 
 \setlength{\cftsecnumwidth}{10mm}
 
-%---------------------------------------------------------------------------
 \setcounter{secnumdepth}{4}
 \brokenpenalty=10000\relax
 
@@ -162,18 +135,13 @@ backend=bibtex
 \tableofcontents
 \clearpage
 
-\include{rozdzial3}
+\include{wstep}
+\include{wprowadzenie}
 \include{rozdzial1}
 \include{rozdzial2}
-\include{tests}
+\include{rozdzial3}
 
 
-
-% itd.
-% \appendix
-% \include{dodatekA}
-% \include{dodatekB}
-% itd.
 
 \printbibliography
 
