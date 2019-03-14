@@ -1,12 +1,12 @@
 \chapter{Weryfikacja modelowa}
 
-Systemy tworzone przez ludzi są coraz bardziej złożone oraz odgrywają coraz większą rolę w życiu każdego z nas.
-Błędy w oprogramowaniu skutkują stratami finansowymi, wizerunkowymi, opóźnieniami, a także utratą zdrowia i życia ludzi. Dowodzą temu następujące przykłady: nieudany start Ariane-5 (04.06.1996), błąd w procesorach Pentium II Intela, czy źle działająca maszyna do radioterapii spowodowała śmierć sześciu pacjentów w latach 1985-1987.
+Systemy tworzone przez ludzi są coraz bardziej złożone oraz zwiększa się ich rola w życiu każdego z nas.
+Błędy w oprogramowaniu skutkują stratami finansowymi, wizerunkowymi, opóźnieniami, a także utratą zdrowia i życia ludzi. Dowodzą temu następujące przykłady: nieudany start Ariane-5 (04.06.1996), błąd w procesorach Pentium II Intela, czy źle działająca maszyna do radioterapii, która spowodowała śmierć sześciu pacjentów w latach 1985-1987.
 
 
 \section{Weryfikacja systemu}
 
-Weryfikacja systemu ma na celu ustalenie, czy projekt posiada oczekiwane właściwości. Mogą one być dość podstawowe, np. nigdy nie dojdzie do zakleszczenia lub związane z domeną, np. nie można wypłacić więcej pieniędzy, niż jest na koncie. Specyfikacja dostarcza informacji, jak system może oraz jak nie może się zachowywać. Oprogramowanie uważa się za poprawne, jeśli spełnia wszystkie właściwości. Schemat weryfikacji został przedstawiony na rys. \ref{fig:system_verification_scheme}.
+Weryfikacja systemu ma na celu ustalenie, czy projekt posiada oczekiwane właściwości. Mogą one być dość podstawowe (np. nigdy nie dojdzie do zakleszczenia) lub związane z domeną (np. nie można wypłacić więcej pieniędzy, niż jest na koncie). Specyfikacja dostarcza informacji, jak system może oraz jak nie może się zachowywać. Oprogramowanie uważa się za poprawne, jeśli spełnia wszystkie właściwości. Schemat weryfikacji został przedstawiony na rys. \ref{fig:system_verification_scheme}.
 
 \begin{figure}[h]
     \centering
@@ -15,7 +15,7 @@ Weryfikacja systemu ma na celu ustalenie, czy projekt posiada oczekiwane właśc
     \label{fig:system_verification_scheme}
 \end{figure}
 
-Podstawową formą radzenia sobie z tym problemem jest testowanie oprogramowania (testy jednostkowe, integracyjne, systemowe itp.). Polega to na uruchamianiu kodu dla różnych ścieżek wykonania, po czym porównuje się ich wyjścia z oczekiwanymi. Niestety, przetestowanie wszystkiego okazuje się praktycznie niemożliwe, zwykle sprawdzane są jedynie warunki brzegowe (stanowi to mały podzbiór wszystkich kombinacji). 
+Podstawową formą radzenia sobie z tym problemem jest testowanie oprogramowania (testy jednostkowe, integracyjne, systemowe itp.). Polega ono na uruchamianiu kodu dla różnych ścieżek wykonania, po czym porównuje się ich wyjścia z oczekiwanymi. Niestety, przetestowanie wszystkiego okazuje się praktycznie niemożliwe, zwykle sprawdzane są jedynie warunki brzegowe (stanowi to mały podzbiór wszystkich kombinacji). 
 
 
 \section{Weryfikacja modelowa}
@@ -24,10 +24,11 @@ Podczas tworzenia skomplikowanych systemów, kładzie się coraz większy nacisk
 Intuicyjnie, metody formalne można rozważać jako matematykę stosowaną dla modelowania i analizy systemów informatycznych. Zapewniają one poprawność z matematyczną dokładnością.
 
 Techniki weryfikacji bazujące na modelu opisują zachowanie systemu deterministycznie i kompletnie. Samo tworzenie pełnego modelu może wykryć luki lub niespójności.
-Po jego stworzeniu, wraz z otaczającymi algorytmami, możliwe jest eksplorowanie stanów systemu.
-Dzieje się to w podejściu "brute-force" - przejrzane zostają wszystkie możliwe scenariusze.
-W ten sposób udowadnia się spełnialność właściwości. Możliwa jest również weryfikacja powiązana z czasem, np. czy system zawsze odpowie poniżej oczekiwanych 5 sekund.
+Po jego stworzeniu, wraz z otaczającymi algorytmami, następuje eksploracja stanów systemu.
+Dzieje się to w podejściu ``brute-force`` - przejrzane zostają wszystkie możliwe scenariusze.
+W ten sposób udowadnia się spełnialność właściwości. Weryfikacji dotyczy również kolejność zdarzeń w czasie, np. czy system zawsze odpowie na żądania klienta w tym samym porządku, w jakim je otrzymał.
 
+\vspace{0.5cm}
 \begin{figure}[h]
     \centering
     \includegraphics[width=\textwidth,keepaspectratio]{img/model_checking_approach_schematic_view.png}
