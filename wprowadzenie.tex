@@ -183,24 +183,22 @@ Sam schemat przedstawiający jak działa weryfikacja modelowa, kiedy wykorzystuj
 \section{Eksploracja stanów systemu}
 
 Posiadanie modelu systemu nie oznacza dostępności pełnego grafu stanów.
+Może to być niepraktyczne lub nawet niemożliwe ze względu na liczbę stanów.
+Preferowanym podejście to generowanie kolejnych stanów i ich weryfikacja ich w locie.
+Takie rozwiązanie pozwala na wykrycie niespójności we wczesnym etapie, unikając generacji całej przestrzeni stanów.
 
+Kolejnym czynnikiem wpływającym na wydajność jest sam algorytm budujący graf stanów.
+W przypadku skomplikowanych systemów spodziewać się można olbrzymiego grafu, więc również czas jego tworzenia będzie odzwierciedlał rozmiar.
+Moc obliczeniowa jednego procesora może okazać się niewystarczająca.
+Warto więc wykorzystać algorytmy równoległe.
+Standardowym rozwiązanie to DFS (przeszukiwanie w głąb - ang. \textit{Depth-first search}) \cite{God94}\cite{Hol99}.
+Występuje w wielu wersjach mających zwiększyć jego wydajność.
+Z czasem powstała też nowa grupa algorytmów.
+Opiera się na podziale grafu na silnie spójne składowe, wywodzi się ona z algorytmu Tarjana.
+Złożoność obliczeniowa tych algorytmów jest liniowa $O(m + n)$, gdzie $m$ to liczba krawędzi, a $n$ oznacza ilość stanów.
+Wszystkie korzystają z tej samej zasady eksploracji - przeszukiwania wstecznego (ang. \textit{post-order}).
+Faktem jest, że problem takiego przeszukiwania jest P-zupełny, więc skalowany, równoległy algorytm tego typu najprawdopodobniej nie istnieje \cite{Reif85}.
 
-\section{Ignore}
-
-TODO
-
-weryfikacja modelowa, przestrzen stanow, LTL (co to, opis skladni, operatorow, przyklad z opisem), automaty, automaty buchiego (przykladowe obrazki automatow z podanej formuly LTL, opis ze potrzebna negacja i szukanie spelnialnosci)
-weryfikacja hardware i software
-alogrytmy wykorzystywane w przeszukiwaniu i weryfikacji
-co to i po co on-the-fly
-Alvis, co to, po co
-
-\cite{Bar12} \cite{Jac05}
-przejrzec publikacje profesora
-
-
-w czesci implementacji:
-opis weryfikowanego systemu
-
-
-A time-optimal on-the-fly parallel algorithm for model checking of weak LTL properties, in: Formal Methods and Software Engineering
+Algorytmem wartym uwagi jest \textit{on-the-fly OWCTY algorithm} \cite{Bar12}.
+Opiera on się na algorytmie OWCTY (ang. \textit{One Way Catch Them Young}) \cite{Cer03} oraz MAP (ang. \textit{Maximal Accepting Predecessor}) \cite{Bri04}.
+Co więcej, pozwala na zrównoleglenie obliczeń.
