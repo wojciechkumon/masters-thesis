@@ -75,18 +75,114 @@ Oczywiście nie brak także wad:
 \section{Logika LTL}
 
 Logika LTL to jednak z logik temporalnych. Opiera się na liniowej strukturze czasu.
-Jej składnia i semantyka pozwala precyzyjnie opisywać właściwości systemu.
-"Temporalna" oznacza umiejscawianie zdarzeń relatywnie względem innych, to pewna abstrakcja ponad czasem.  Z tego powodu niewykonalne jest sprawdzenie, czy maksymalne opóźnienie między zdarzeniami wynosi $500ms$.
+Jej składnia i semantyka pozwala precyzyjnie opisywać bogate spektrum właściwości systemu, włączając w to m.in bezpieczeństwo czy żywotność \cite{Bel17}.
+``Temporalna`` oznacza umiejscawianie zdarzeń relatywnie względem innych, to pewna abstrakcja ponad czasem.  Z tego powodu niewykonalne jest sprawdzenie, czy maksymalne opóźnienie między zdarzeniami wynosi $500ms$.
 
-Składnia LTL
-- spis skladni, Intuitive semantics of temporal modali (obrazek)
+Formuły LTL ponad zbiorem $AP$ wyrażeń atomowych przedstawia poniższa gramatyka:
+\begin{gather}
+\varphi::= true \,\, | \,\, false \,\, | \,\, a \,\, | \,\, \neg\varphi \,\, | \,\, \varphi \land \psi \,\, | \,\, \varphi \lor \psi \,\, | \,\, \varphi \Rightarrow \psi \,\, | \,\, \varphi \Leftrightarrow \psi \,\, | \nonumber\\
+\mathbf{X}\varphi \,\, | \,\, \mathbf{F}\varphi \,\, | \,\, \mathbf{G}\varphi \,\, | \,\, \varphi\mathbf{U}\psi \,\, | \,\, (\varphi)\nonumber
+\end{gather}
+gdzie $a \in AP$ \\
+Wyjaśnienie symboli (intuicyjna semantyka przedstawiona jest na rys. \ref{fig:ltl_semantics}): \\
+$\mathbf{X}$ - $ne\mathbf{X}t$ - w następnym stanie \\
+$\mathbf{U}$ - $\mathbf{U}ntil$ - aż do pewnego momentu w przyszłości \\
+$\mathbf{F}$ - $\mathbf{F}inally$ - teraz lub w przyszłości \\
+$\mathbf{G}$ - $\mathbf{G}lobally$ - teraz i w każdym momencie w przyszłości
+\vspace{0.5cm}
 
 \begin{figure}[h]
     \centering
-    \includegraphics[width=\textwidth,keepaspectratio]{img/ltl_intuitive_semantics.png}
+    \includegraphics[height=11cm,keepaspectratio]{img/ltl_intuitive_semantics.png}
     \caption{Intuicyjna semantyka temporalnych modalności (źródło~\cite{Bai08}).}
     \label{fig:ltl_semantics}
 \end{figure}
+
+Przykładowe formuły LTL:
+\begin{itemize}
+\item $\mathbf{G}\neg\varphi$ - niemożliwe jest osiągnięcie stanu posiadającego $\varphi$ (bezpieczeństwo)
+\item $\mathbf{G}(\varphi\Rightarrow\mathbf{F}\psi)$ - dla dowolnego stanu, jeśli posiada on $\varphi$, w końcu znajdziemy stan posiadający $\psi$ (żywotność)
+\item $\mathbf{FG}\varphi$ - w końcu znajdziemy taki stan, od które zawsze spełnione będzie $\varphi$ (stabilność)
+\end{itemize}
+
+
+\section{Automat Büchiego}
+
+W poprzedniej sekcji przedstawiona została liniowa logika LTL.
+Niestety w obecnej postaci nie można jej wykorzystać do weryfikacji modelowej.
+Punktem startowym jest system tranzycyjny $TS$ oraz formuła LTL $\varphi$, która formalizuje wymaganie dla $TS$.
+Zadanie polega na sprawdzeniu, czy $TS \models \varphi$.
+Jeśli $\varphi$ jest naruszona, szczegóły błędy powinny zostać dostarczone w celu jego naprawienia.
+Manualne dowodzenie $TS \models \varphi$ to zazwyczaj bardzo trudny proces (zwykle systemy tranzycyjne są ogromne).
+Dodatkowo rzadkim przypadkiem jest jedna formuła do weryfikacji.
+Wymagania składają się na ich zbiór, taki jak $\varphi_1,...,\varphi_k$.
+Wynikają z tego dwie opcje - można połączyć je w jedną $\varphi_1 \land ... \land \varphi_k$, aby uzyskać specyfikację wszystkich wymagań naraz lub traktować każde wymaganie $\varphi_i$ niezależnie.
+Drugie podejście często okazuje się wydajniejsze.
+Ponadto znalezienie błędu podczas sprawdzania pełnej specyfikacji nie dostarcza tak precyzyjnych danych diagnostycznych.
+
+Pomiędzy logiką temporalną a teorią $\omega$-regularnych języków zachodzi bliska relacja \cite{Sis83}\cite{Wol83}.
+Języki $\omega$-regularne są analogiczne do regularnych, lecz są zdefiniowane na nieskończonych słowach (zamiast skończonych).
+Rozpoznawane są one przez automat Büchiego \cite{Buch66}.
+To skończony automat, który operuje na nieskończonych słowach.
+Nieskończone słowo jest akceptowane przez automat Büchiego wtedy i tylko wtedy, gdy stan akceptujący wystąpi nieskończenie wiele razy \cite{Sis87}.
+Formalnie, deterministyczny automat Büchiego to krotka $A = (Q,\Sigma,\delta,q_0,F)$ składająca się z następujących elementów:
+\begin{itemize}
+\item $Q$ - skończony zbiór. Elementy $Q$ nazywane są stanami $A$.
+\item $\Sigma$ - skończony zbiór nazywany alfabetem.
+\item $\delta: Q \times \Sigma \rightarrow Q$ - funkcja nazywana funkcją tranzycji $A$.
+\item $q_0$ - element $Q$, nazywany stanem początkowym $A$
+\item $F \subseteq Q$ - warunek akceptujący. $A$ akceptuje dokładnie takie przejścia, gdzie przynajmniej jeden z nieskończenie często występujących stanów jest w $F$.
+\end{itemize}
+W niedeterministycznym automacie Büchiego (NBA - ang. \textit{non-deterministic Büchi automaton}), funkcja tranzycji $\delta$ zastąpiona jest relacją tranzycji $\Delta$, która zwraca zbiór stanów, a w miejscu stanu początkowego $q_0$ znajduje się zbiór stanów początkowych.
+
+Uogólniony automat Büchiego (GBA - ang. \textit{generalized Büchi automaton}), to krotka $A = (Q,\Sigma,L,\Delta,Q_0,F)$:
+\begin{itemize}
+\item $Q$ - skończony zbiór. Elementy $Q$ nazywane są stanami $A$.
+\item $\Sigma$ - skończony zbiór nazywany alfabetem.
+\item $\delta: Q \times \Sigma \rightarrow 2^Q$ - funkcja nazywana funkcją tranzycji $A$.
+\item $Q_0$ - podzbiór $Q$, nazywany stanami początkowymi
+\item $F$ - warunek akceptujący. Składa się z zera lub więcej akceptujących zbiorów. Każdy taki zbiór $F_i \in F$ jest podzbiorem $Q$.
+\end{itemize}
+Pomimo różnic, GBA to ekwiwalent NBA w kategorii siły ekspresji.
+W związku z tym możliwa jest jego konwersja do NBA \cite{Mer14}\cite{Dol95}.
+
+Na rys. \ref{fig:nba1} oraz \ref{fig:nba2} znajdują się przykładowe NBA, wraz z odpowiadającymi im formułami.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=8cm,keepaspectratio]{img/nba1.png}
+    \caption{NBA dla $\mathbf{FG}a$ (źródło~\cite{Bai08}).}
+    \label{fig:nba1}
+\end{figure}
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=8cm,keepaspectratio]{img/nba2.png}
+    \caption{NBA dla $\mathbf{G}(a \Rightarrow \mathbf{F}b)$ (źródło~\cite{Bai08}).}
+    \label{fig:nba2}
+\end{figure}
+
+\noindent
+Algorytm weryfikacji formuły LTL $\varphi$ w systemie tranzycyjnym $TS$ wygląda następująco:
+\begin{enumerate}
+    \item Zaneguj formułę $\varphi$ otrzymując $\neg\varphi$.
+    \item Skonstruuj niedeterministyczny automat Büchiego $A_{\neg\varphi}$ odpowiadający formule $\neg\varphi$.
+    \item Skonstruuj wynikowy system tranzycyjny $TS \otimes A$.
+    \item Jeśli istnieje ścieżka $\pi$ w $TS \otimes A$ spełniająca akceptujący warunek $A$, zwróć ``nie`` wraz z opisem ścieżki $\pi$, w przeciwnym razie zwróć ``tak``.
+\end{enumerate}
+
+Sam schemat przedstawiający jak działa weryfikacja modelowa, kiedy wykorzystujemy logikę LTL do opisu właściwości, znajduje się na rys. \ref{fig:ltl_model_checking}.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[height=11cm,keepaspectratio]{img/ltl_model_checking_overview.png}
+    \caption{Przegląd weryfikacji modelowej LTL (źródło~\cite{Bai08}).}
+    \label{fig:ltl_model_checking}
+\end{figure}
+
+
+\section{Eksploracja stanów systemu}
+
+Posiadanie modelu systemu nie oznacza dostępności pełnego grafu stanów.
 
 
 \section{Ignore}
