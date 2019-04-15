@@ -200,6 +200,33 @@ Złożoność obliczeniowa tych algorytmów jest liniowa $O(m + n)$, gdzie $m$ t
 Wszystkie korzystają z tej samej zasady eksploracji - przeszukiwania wstecznego (ang. \textit{post-order}).
 Faktem jest, że problem takiego przeszukiwania jest P-zupełny, więc skalowany, równoległy algorytm tego typu najprawdopodobniej nie istnieje \cite{Reif85}.
 
-Algorytmem wartym uwagi jest \textit{on-the-fly OWCTY algorithm} \cite{Bar12}.
+Algorytmem wartym uwagi jest \textit{on-the-fly OWCTY} \cite{Bar12}.
 Opiera on się na algorytmie OWCTY (ang. \textit{One Way Catch Them Young}) \cite{Cer03} oraz MAP (ang. \textit{Maximal Accepting Predecessor}) \cite{Bri04}.
 Co więcej, pozwala na zrównoleglenie obliczeń.
+
+OWCTY nie polega na przeszukiwaniu wstecznym DFS, dzięki czemu wykonalne jest jego równoległe wykonanie.
+Niestety procedura sortowania topologicznego nie wykrywa cykli akceptujących wprost.
+Algorytm skupia się na eliminowaniu cykli nieakceptujących. 
+Wyliczany i przechowywany jest zbiór stanów poprzedzających akceptujący cykl.
+Jeśli po zakończeniu algorytmu zbiór ten okaże się pusty, oznacza to, że nie ma cyklu akceptującego.
+Całość składa się z dwóch faz, które wykonywane są w pętli, dopóki nie osiągnie się stałego punktu (kolejne wykonanie faz nic nie zmienia).
+
+Algorytm MAP bazuje na propagacji maksimum akceptujących poprzedników i podobnie do OWCTY, jego wykonanie polega na wielu przejściach.
+Każde z nich w pełni przekazuje maksimum poprzedników do wszystkich stanów.
+Obliczenie poprawnej wartości maksymalnego poprzednika dla wierzchołka wymaga czasem przesłania nowej (większej) wartości poprzez krawędź, która była już wykorzystana. Zjawisko to określa się jako repropagacja.
+Po znalezieniu wierzchołka, który jest swoim maksymalnym poprzednikiem (czy wykryciu cyklu akceptującego), algorytm natychmiast się kończy i wskazuje kontrprzykład.
+
+Algorytm on-the-fly OWCTY czerpie z dwóch powyższych.
+Wykorzystuję heurystykę opartą na algorytmie MAP, która w wielu przypadkach wykryje akceptujący cykl i zakończy procedurę.
+W przeciwnym wypadku działanie nie zajdzie w locie, a wygeneruje cały graf stanów zgodnie z instrukcjami OWCTY.
+Takie połączenie pozwala skorzystać z zalet obu metod - weryfikacji w locie, liniowym czasie wykonania, czy możliwości zrównoleglenia.
+
+Algorytmy służące do detekcji cykli akceptujących klasyfikuje się ze względu na zdolność do wczesnego zakończenia.
+Określa się je jako:
+\begin{itemize}
+\item Algorytm działający w locie poziomu 0, jeśli graf automatu zawiera błąd, dla którego algorytm nigdy nie zakończy się wcześniej
+\item Algorytm działający w locie poziomu 1, jeśli dla wszystkich grafów automatów zawierających błąd, algorytm może zakończyć  się wcześniej, ale nie jest to zagwarantowane
+\item Algorytm działający w locie poziomu 2, jeśli dla wszystkich grafów automatów zawierających błąd, algorytm gwarantuje wczesne zakończenie
+\end{itemize}
+Warto zauważyć, że algorytmy poziomu 0 bywają także rozważane jako niedziałające w locie.
+Przykładowy algorytm poziomu 0 to OWCTY, poziomu 1 on-the-fly OWCTY, poziomu 2 MAP.
