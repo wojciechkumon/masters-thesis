@@ -74,6 +74,114 @@
 \draw[->, >=latex] (5,\noderadius/2) arc ({\marginangle}:{180 - \marginangle}:1.7);
 \end{tikzpicture}
 
+
+% TODO opisac funkcje globalne: getInitialStates(), isAccepting(x), acceptingCycleFound()
+\begin{algorithm}
+\caption{$ detectAcceptingCycle() $}
+\begin{algorithmic}[1]
+\REQUIRE $ G = (V,E,ACC) $
+
+\STATE $ initialStates \leftarrow getInitialStates() $
+\STATE $ approximationSet \leftarrow initialise(initialStates) $
+\STATE $ oldSize \leftarrow \infty $
+\WHILE{$ (approximationSet.size \neq oldSize)\ \mathbf{and}\ (approximationSet.size > 0) $}
+  \STATE $ oldSize \leftarrow approximationSet.size $
+  \STATE $ eliminateNoAccepting(approximationSet) $
+  \STATE $ eliminateNoPredecessors(approximationSet) $
+\ENDWHILE
+\RETURN $ approximationSet.size > 0 $
+\end{algorithmic}
+\end{algorithm}
+
+
+\begin{algorithm}
+\caption{$ initialise(initialStates) $}
+\begin{algorithmic}[1]
+\REQUIRE $ initialStates $
+
+\STATE $ approximationSet \leftarrow initialStates $
+\STATE $ q \leftarrow new\ Queue() $
+\STATE $ q.pushBack(initialStates) $
+\WHILE{$ q.isNotEmpty() $}
+  \STATE $ s \leftarrow q.popFront() $
+  \FORALL{$ t \in getSuccessors(s) $}
+    \IF{$ t \notin approximationSet $}
+      \STATE $ approximationSet.add(t) $
+      \STATE $ q.pushBack(t) $
+    \ENDIF
+    \IF{$ isAccepting(t) $}
+      \IF{$ (t == s)\ \mathbf{or}\ (approximationSet.getMap(s) == t) $}
+        \STATE $ acceptingCycleFound() $
+        \RETURN
+      \ENDIF
+      \STATE $ approximationSet.setMap(t, max(t, approximationSet.getMap(s))) $
+    \ELSE
+      \STATE $ approximationSet.setMap(t, approximationSet.getMap(s)) $
+    \ENDIF
+  \ENDFOR
+\ENDWHILE
+\RETURN $ approximationSet $
+\end{algorithmic}
+\end{algorithm}
+
+
+\begin{algorithm}
+\caption{$ eliminateNoAccepting(approximationSet) $}
+\begin{algorithmic}[1]
+\REQUIRE $ approximationSet $
+
+\STATE $ tmpApproximationSet \leftarrow \emptyset $
+\STATE $ q \leftarrow new\ Queue() $
+\FORALL{$ s \in approximationSet $}
+  \IF{$ isAccepting(s) $}
+    \STATE $ q.pushBack(s) $
+    \STATE $ tmpApproximationSet.add(s) $
+    \STATE $ tmpApproximationSet.setPredecessorCount(s,0) $
+  \ENDIF
+\ENDFOR
+\STATE $ approximationSet \leftarrow tmpApproximationSet $
+\WHILE{$ q.isNotEmpty() $}
+  \STATE $ s \leftarrow q.popFront() $
+  \FORALL{$ t \in getSuccessors(s) $}
+    \IF{$ t \in approximationSet $}
+      \STATE $ approximationSet.incrementPredecessorCount(t) $
+    \ELSE
+      \STATE $ q.pushBack(t) $
+      \STATE $ approximationSet.add(t) $
+      \STATE $ approximationSet.setPredecessorCount(t,0) $
+    \ENDIF
+  \ENDFOR
+\ENDWHILE
+\end{algorithmic}
+\end{algorithm}
+
+
+\begin{algorithm}
+\caption{$ eliminateNoPredecessors(approximationSet) $}
+\begin{algorithmic}[1]
+\REQUIRE $ approximationSet $
+
+\STATE $ q \leftarrow new\ Queue() $
+\FORALL{$ s \in approximationSet $}
+  \IF{$ approximationSet.getPredecessorCount(s) == 0 $}
+    \STATE $ q.pushBack(s) $
+  \ENDIF
+\ENDFOR
+\WHILE{$ q.isNotEmpty() $}
+  \STATE $ s \leftarrow q.popFront() $
+  \STATE $ approximationSet.remove(s) $
+  \FORALL{$ t \in getSuccessors(s) $}
+    \STATE $ approximationSet.decrementPredecessorCount(t) $
+    \IF{$ approximationSet.getPredecessorCount(t) == 0 $}
+      \STATE $ q.pushBack(t) $
+    \ENDIF
+  \ENDFOR
+\ENDWHILE
+\end{algorithmic}
+\end{algorithm}
+
+
+
 \section{Ignore}
 
 TODO
