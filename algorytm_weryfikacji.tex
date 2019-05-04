@@ -50,8 +50,6 @@ Opis użytych zmiennych/procedur w algorytmach \ref{alg:detectAcceptingCycle} i 
 \item \textit{acceptingCycleFound()} - służy do wcześniejszego zakończenia algorytmu (kiedy cykl akceptujący został wykryty bez eksploracji całej przestrzeni stanów)
 \end{itemize}
 
-% TODO opisac funkcje globalne: graf G=(V,E,ACC), getInitialStates(), isAccepting(x), acceptingCycleFound()
-
 \begin{algorithm}
 \caption{$ initialise(initialStates) $}
 \label{alg:initialise}
@@ -86,7 +84,7 @@ Opis użytych zmiennych/procedur w algorytmach \ref{alg:detectAcceptingCycle} i 
 
 \section{Heurystyka}
 
-To zaaplikowanie heurystyki w fazie inicjalizacji (funkcja \textit{initialise()} w algorytmie \ref{alg:initialise}) modyfikuje oryginalny OWCTY.
+To zaaplikowanie heurystyki w fazie inicjowania (funkcja \textit{initialise()} w algorytmie \ref{alg:initialise}) modyfikuje oryginalny OWCTY.
 Jedyna różnica to linie 11-19, które wykorzystują pomysł z algorytmu MAP.
 Propaguje się jednego akceptującego poprzednika przez wszystkie nowo odkryte krawędzie.
 Jeśli stan akceptujący zostanie przekazany do samego siebie, oznacza to wykrycie cyklu akceptującego, a obliczenia zostają przerwane (linia 13).
@@ -123,14 +121,14 @@ Zgodnie z działaniem algorytmu MAP, na stan akceptujący do rozpropagowania wyb
 \end{algorithmic}
 \end{algorithm}
 
-Faza inicjalizacji algorytmu OWCTY wymaga eksploracji całej przestrzeni stanów, więc została wykorzystana do wykonania detekcji cykli wykorzystując propagację maksymalnego akceptującego stanu.
-W przeciwieństwie do alogrytmu MAP brakuje to repropagacji, aby złożoność obliczeniowa pozostała i liniowa i była proporcjonalna do rozmiaru grafu.
+Faza inicjacji algorytmu OWCTY wymaga eksploracji całej przestrzeni stanów, więc została użyta do wykonania detekcji cykli, wykorzystując propagację maksymalnego akceptującego stanu.
+W przeciwieństwie do algorytmu MAP brakuje to repropagacji, aby złożoność obliczeniowa pozostała i liniowa i była proporcjonalna do rozmiaru grafu.
 Skutek tego ograniczenia to brak wykrywalności wszystkich cykli (stąd to heurystyka).
 
 \noindent
 Wyróżnić można dwa podstawowe powody, kiedy metoda ta będzie nieskuteczna (pominie cykl):
 \begin{enumerate}
-  \item Maksymalny akceptujący poprzednik nie leży wewnętrz cyklu.
+  \item Maksymalny akceptujący poprzednik nie leży wewnątrz cyklu.
   \item Wartość maksymalnego akceptującego poprzednika nie wróci do źródła, mimo że cykl istnieje.
 \end{enumerate}
 
@@ -159,15 +157,16 @@ Wyróżnić można dwa podstawowe powody, kiedy metoda ta będzie nieskuteczna (
 \end{algorithmic}
 \end{algorithm}
 
-Pierwszy przypadek obsługiwany jest w oryginalnym algorytmie MAP poprzez iteracyjne usuwanie stanów akceptujących, co wymaga dodatkowej liczby przejść o liniowej złożoności. Drugi przypadek obsługuje repropagacja, która również nie mogła zostać zawarta ze względu na podniesienie złożoności obliczeniowej.
+Pierwszy przypadek obsługiwany jest w oryginalnym algorytmie MAP poprzez iteracyjne usuwanie stanów akceptujących, co wymaga dodatkowej liczby przejść o liniowej złożoności.
+Drugi przypadek obsługuje repropagacja, która również nie mogła zostać zawarta ze względu na podniesienie złożoności obliczeniowej.
 
 W sytuacji, gdy żadne z powyższych nie zachodzi, akceptujący cykl zostanie wykryty.
 Przykłady z rys. \ref{fig:alg_heuristic_examples}:
 \begin{enumerate}[label=(\alph*)]
-\item Przypadek trywialny (jeden stan akceptujący). Wartość $B$ zostanie rozpropagowana do $C$ i $D$. W wyniku tego $B$ powróci do wezła źródłowego, więc cykl zostanie wykryty.
+\item Przypadek trywialny (jeden stan akceptujący). Wartość $B$ zostanie rozpropagowana do $C$ i $D$. W wyniku tego $B$ powróci do węzła źródłowego, więc cykl zostanie wykryty.
 \item W tej sytuacji także nastąpi wykrycie cyklu, jednak po drodze występuje kilka stanów akceptujących. Ponieważ $ B > C \land B > D $, $B$ zostanie przesłane dalej.
 \item Przypadek podobny do poprzedniego, lecz krawędź powrotna skierowana jest w $C$ (zamiast w $B$). Efekt tej zmiany to umiejscowienie największego akceptującego poprzednika poza cyklem ($ B > C \land B > D $). Taki cykl zostanie pominięty przez zastosowaną heurystykę (1. podstawowy powód).
-\item Maksymalny akceptujący poprzednik znaduje się w cyklu, jednak to nie on go zaczyna. Próba propagacji wartości $C$ do $B$ zakończy się fiaskiem, ponieważ $ C < B $. Dalej $B$ przekazane zostanie do $B$. W wyniku tego porównuje się ze sobą obecną wartość $D$ ze stanem, do którego wraca krawędź. $ B \neq C $, więc do wykrycia cyklu nie dojdzie.
+\item Maksymalny akceptujący poprzednik znajduje się w cyklu, jednak to nie on go zaczyna. Próba propagacji wartości $C$ do $B$ zakończy się fiaskiem, ponieważ $ C < B $. Dalej $B$ przekazane zostanie do $B$. W wyniku tego porównuje się ze sobą obecną wartość $D$ ze stanem, do którego wraca krawędź. $ B \neq C $, więc do wykrycia cyklu nie dojdzie.
 \end{enumerate}
 
 
@@ -177,9 +176,9 @@ Przykłady z rys. \ref{fig:alg_heuristic_examples}:
 \def \marginangle {30}
 \begin{figure}
 \centering
+% w komentarzach wartość MAP oryginalna i po algorytmie
 
-% w komentarzach wartosc MAP oryginalna i po algorytmie
-% uda sie, wracamy do akceptujacego
+% uda się, wracamy do akceptującego
 \begin{tikzpicture}
 \node at (-4,1) {$ (a) $};
 \draw (-4,0) node[draw, circle, minimum size=\noderadius] {$ A $}; % -/-
@@ -195,7 +194,7 @@ Przykłady z rys. \ref{fig:alg_heuristic_examples}:
 \draw[->, >=latex] (5,\noderadius/2) arc ({\marginangle}:{180 - \marginangle}:3.4);
 \end{tikzpicture}
 
-% uda sie, wartosc MAP ze stanu 2 przeszla na 3 i 4
+% uda się, wartość MAP ze stanu 2 przeszła na 3 i 4
 \begin{tikzpicture}
 \node at (-4,1) {$ (b) $};
 \draw (-4,0) node[draw, circle, minimum size=\noderadius] {$ A $}; % -/-
@@ -213,7 +212,7 @@ Przykłady z rys. \ref{fig:alg_heuristic_examples}:
 \draw[->, >=latex] (5,\noderadius/2) arc ({\marginangle}:{180 - \marginangle}:3.4);
 \end{tikzpicture}
 
-% nie uda sie -> mimo poprawnej pętli, stan 3 nie jest źródłem wartości propagowanej dalej (a)
+% nie uda się -> mimo poprawnej pętli, stan 3 nie jest źródłem wartości propagowanej dalej (a)
 \begin{tikzpicture}
 \node at (-4,1) {$ (c) $};
 \draw (-4,0) node[draw, circle, minimum size=\noderadius] {$ A $}; % -/-
@@ -231,7 +230,7 @@ Przykłady z rys. \ref{fig:alg_heuristic_examples}:
 \draw[->, >=latex] (5,\noderadius/2) arc ({\marginangle}:{180 - \marginangle}:1.7);
 \end{tikzpicture}
 
-% nie uda się -> kolejne stany akceptujące mają wiekszą wartość MAP, przez co poprzednia zostaje zapomniana (c,b?)
+% nie uda się -> kolejne stany akceptujące mają większą wartość MAP, przez co poprzednia zostaje zapomniana (c,b?)
 \begin{tikzpicture}
 \node at (-4,1) {$ (d) $};
 \draw (-4,0) node[draw, circle, minimum size=\noderadius] {$ A $}; % -/-
@@ -269,6 +268,6 @@ Niestety nie działa ona w locie, więc potrzebuje wygenerowanej całej przestrz
 \begin{figure}[h]
     \centering
     \includegraphics[height=11cm,keepaspectratio]{img/on-the-fly-diagram.png}
-    \caption{Diagram przedstawiający kiedy dochodzi do wczesnego zakończenia algorytmu.}
+    \caption{Diagram prezentujący, kiedy dochodzi do wczesnego zakończenia algorytmu.}
     \label{fig:ltl_model_checking}
 \end{figure}
