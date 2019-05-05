@@ -42,6 +42,7 @@ Kiedy wierzchołek znika ze zbioru, należy zmniejszyć stopień jego następnik
 Brak takich następników oznacza zakończenie fazy.
 \textit{EliminateNoAccepting()} oraz \textit{eliminateNoPredecessors()} wykonywane są w pętli, dopóki zachodzą jakieś zmiany.
 
+\noindent
 Opis użytych zmiennych/procedur w algorytmach \ref{alg:detectAcceptingCycle} i \ref{alg:initialise}:
 \begin{itemize}
 \item $ G = (V,E,ACC) $ - wejściowy graf składający się ze zbiorów wierzchołków, krawędzi i stanów akceptujących
@@ -82,7 +83,7 @@ Opis użytych zmiennych/procedur w algorytmach \ref{alg:detectAcceptingCycle} i 
 \end{algorithm}
 
 
-\section{Heurystyka}
+\section{Heurystyka} \label{heuristic}
 
 To zaaplikowanie heurystyki w fazie inicjowania (funkcja \textit{initialise()} w algorytmie \ref{alg:initialise}) modyfikuje oryginalny OWCTY.
 Jedyna różnica to linie 11-19, które wykorzystują pomysł z algorytmu MAP.
@@ -174,7 +175,7 @@ Przykłady z rys. \ref{fig:alg_heuristic_examples}:
 \def \noderadiuspt {0.6}
 \def \radius {1.5}
 \def \marginangle {30}
-\begin{figure}
+\begin{figure}[h]
 \centering
 % w komentarzach wartość MAP oryginalna i po algorytmie
 
@@ -254,20 +255,30 @@ Przykłady z rys. \ref{fig:alg_heuristic_examples}:
 \end{figure}
 
 
+\newpage
 \section{Działanie w locie}
 
-Działa on w locie poziomu 1.
+Zastosowany algorytm działa w locie (poziom 1).
 W tym przypadku oznacza to, że może on zakończyć się przed eksploracją całego grafu stanów.
-Powodem, przez który nie dzieje się tak zawsze, jest zastosowana heurystyka.
+Stany są generowane i na bieżąco (każdy po kolei) weryfikowane.
+Powodem, że to poziom 1 (a nie 2), przez który nie dzieje się tak zawsze, jest zastosowana heurystyka.
 Pozwala ona wykryć część cykli akceptujących w locie, jednak są przypadki, kiedy nie wystarcza.
 Wtedy cykl zostanie pominięty.
 Do tego momentu algorytm ten okazuje się niewystarczający i może zwrócić niepoprawny wynik.
-Zostało to uniknięte poprzez dodanie drugiej części, która odnajdzie już każdy cykl akceptujący.
+Zostało to uniknięte poprzez dodanie drugiej części, która odnajdzie już każdy cykl akceptujący (OWCTY).
 Niestety nie działa ona w locie, więc potrzebuje wygenerowanej całej przestrzeni stanów.
 
 \begin{figure}[h]
     \centering
-    \includegraphics[height=11cm,keepaspectratio]{img/on-the-fly-diagram.png}
+    \includegraphics[height=12.8cm,keepaspectratio]{img/on-the-fly-diagram.png}
     \caption{Diagram prezentujący, kiedy dochodzi do wczesnego zakończenia algorytmu.}
-    \label{fig:ltl_model_checking}
+    \label{fig:on_the_fly_diagram}
 \end{figure}
+
+Ustalenie, kiedy algorytm zadziała w locie, przedstawia rys. \ref{fig:on_the_fly_diagram}.
+Kluczowe pytanie to czy graf zawiera wykrywalny przez heurystykę cykl akceptujący.
+Jeśli tak, wtedy z cała procedura zakończy się wcześnie (bez eksploracji wszystkich wierzchołków, a zaraz po zamknięciu się cyklu).
+
+W przypadku grafu posiadającego cykl akceptujący, który zostanie pominięty (zgodnie z 2 powodami opisanymi w sekcji \ref{heuristic}), dojdzie do pełnego przeszukania, aby go wykryć (brak działania w locie).
+Niespełnienie formuły zawsze implikuje przegląd wszystkich wierzchołków grafu.
+Nie można orzekać niespełnienia przed sprawdzeniem całości.
