@@ -37,8 +37,9 @@ GP spełnia prosty interfejs przedstawiony w listingu \ref{lst:graph_provider_in
     }
 \end{lstlisting}
 
-\textit{LTL Verifier} (\textbf{LV}) to główna aplikacja zajmująca się weryfikacją modelową i zawiera główną część tego algorytmu.
+\textit{LTL Verifier} (\textbf{LV}) to główna serwerowa aplikacja zajmująca się weryfikacją modelową i zawiera główną część tego algorytmu.
 Konwertuje ona także formuły LTL do automatów Büchiego.
+Napisana została w języku Java z wykorzystaniem frameworka Spring.
 Interfejs implementowany przez LV opisuje listing \ref{lst:ltl_verifier_interface}.
 
 \begin{lstlisting}[caption={Interfejs implementowany przez LV.},captionpos=b,label={lst:ltl_verifier_interface}]

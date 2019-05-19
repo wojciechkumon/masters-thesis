@@ -34,7 +34,7 @@ Po tym etapie jednoznacznie wiadomo, czy formuła została spełniona.
 Kod prezentujący funkcjonalność realizowaną przez GB znajduje się w listingu \ref{lst:GB_pseudocode}.
 
 \begin{minipage}{\linewidth}
-\begin{lstlisting}[caption={Kod algorytmu realizowanego przez GB.},captionpos=b,label={lst:GB_pseudocode}]
+\begin{lstlisting}[caption={Kod algorytmu realizowanego przez GB w języku Java.},captionpos=b,label={lst:GB_pseudocode}]
 public VerificationState checkModel() {
   Collection<SystemState> states = initialStates.initialStates();
   List<StoredSystemState> saved = store.save(states).getNewlyStoredStates();
@@ -91,18 +91,51 @@ public VerificationState checkModel() {
 
 \section{Specyfikacja formuły LTL} \label{sec:LTL_formula_spec}
 
-% Formuly LTL sprawdzane dzieki Matcherom hamcresta
+Obiektowa reprezentacja formuły LTL nie wystarcza, aby móc je tworzyć.
+Potrzebny jest sposób umożliwiający zapis tekstem.
+Dzięki temu można przygotowywać zestawy formuł, jakie powinien spełniać system, po czym wykorzystać je jako parametr dla weryfikatora.
+Koniecznością więc było ich parsowanie.
 
+Spełnić należało dwa wymagania.
+Po pierwsze obsługiwać spójniki zdaniowe i operatory temporalne, jakie oferuje LTL.
+Po drugie pozwolić elastyczność, co do samych warunków, tak aby móc je dowolnie komponować i łączyć.
+Wspierać należało porównywanie dowolnych wartości modelu na różne sposoby, np. przez tę samą wartość, wyrażenia regularne, czy relację porządku.
+
+Zamiast tworzenia własnego języka, wykorzystany został Kotlin poprzez jego silnik skryptowy.
+Pozwala na nieograniczoną elastyczność w tworzeniu formuł.
+Kod wykonywany jest locie i zamieniany na reprezentację obiektową.
+Jego składnia pozwala na elegancką notację z wykorzystaniem operatorów infiksowych.
+
+Obiekt formuły opisany został w sekcji \ref{sec:ltl2buchi}.
+Do porównywania wartości wykorzystana została biblioteka \textit{Hamcrest} (\url{http://hamcrest.org}).
+Oferuje ona bogaty zestaw komparatorów, możliwość ich łączenia i testowania na dowolnym obiekcie systemu.
+
+Przykładowe formuły prezentuje listing \ref{lst:kotlin_formulas}.
+
+\begin{minipage}{\linewidth}
+\begin{lstlisting}[caption={Przykładowe formuły LTL w języku Kotlin.},captionpos=b,label={lst:kotlin_formulas}]
+
+val bfsPcEq1 = proposition(hasProperty<SystemState>("bfsHeuristicState", 
+        hasProperty<Int>("pc", equalTo(1))))
+val bfsPcGt1 = proposition(hasProperty<SystemState>("bfsHeuristicState",
+        hasProperty<Int>("pc", greaterThan(1))))
+val formula = globally(bfsPcEq1 implies finally(bfsPcGt1))
+
+
+\end{lstlisting}
+\end{minipage}
+
+% TODO zapytać o sensowne formuły
+
+
+\section{LTL to Büchi} \label{sec:ltl2buchi}
+
+% TODO opis libki ltl2buchi https://github.com/fraimondi/ltl2buchi i jej integracji
+% + opis calego obiektu formuly, parsowania, fabryka nad tym itp
 
 \section{LTL Verifier}
 
 % szczegoly interfejsu restowego, poprawic pseudokod w rozdziale 3
-
-
-\section{LTL to Büchi}
-
-% opis libki ltl2buchi https://github.com/fraimondi/ltl2buchi i jej integracji
-
 
 \section{Baza danych}
 
