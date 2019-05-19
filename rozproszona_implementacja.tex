@@ -1,11 +1,109 @@
 \chapter{Rozproszona implementacja}
 
+Opisany algorytm dostosowany został do środowiska rozproszonego.
+Taka implementacja pozwala uzyskać wysoką wydajność całego systemu, który staje się skalowany.
+Osiąga się to poprzez horyzontalne replikowanie aplikacji, która obsługuje weryfikację modelową.
+Uruchomione zostaje wiele instancji tego samego serwisu.
+
+Dzięki jego bezstanowości (żadnych danych sesyjnych, które przechowywane są w pamięci pomiędzy zapytaniami do serwera) nie ma znaczenia, która replika obsłuży żądanie.
+Każda wykona je identycznie, a cały stan odczytywany i umieszczany jest z wykorzystaniem bazy danych.
+W środowisku chmurowym cały system może być dynamicznie dostosowywane do aktualnych potrzeb, aby zapewnić szybkość, ale także nie marnować zasobów.
+
+Poniżej przedstawiony zostanie opis zrealizowanego systemu.
 
 
+\section{Graph Builder}
 
-% Rozproszona implementacja algorytmu
-% wydajność poprzez skalowalność, mozliwosc uruchomienia wielu instancji np. w srodowisku chmurowym
-% pseudokod międzyapkowy + dokladny opis kazda apka robi
-% opis całego API HTTP (pseudorestowego)
-% opis libki ltl2buchi https://github.com/fraimondi/ltl2buchi
+GB inicjuje cały algorytm oraz działa jako dostawca stanów dla weryfikatora (uzyskuje je od GP).
+Najpierw wybierana jest formuła LTL, która zostanie sprawdzona (szczegóły jej specyfikacji w sekcji \ref{sec:LTL_formula_spec}).
+Następnie zaczyna się już główna część algorytmu.
+Pobierane są stany początkowe, po czym przekazywane są LV oraz heurystyce przeszukującej graf.
+
+Każda weryfikacja posiada swój unikalny identyfikator, aby móc prowadzić wiele z nich równolegle na tym samym grafie stanów.
+Nadawanie go następuje podczas wysyłania pierwszych stanów do LV.
+Używa się go później w każdej komunikacji z weryfikatorem.
+
+Wykorzystywane jest przeszukiwanie wszerz (BFS) zgodnie z fazą \textit{initialise} (algorytm \ref{alg:initialise}).
+Kolejne stany uzyskiwane od GP zostają zapisywane w bazie danych, a także sprawdzane przez LV, który zwraca informacje o statusie weryfikacji.
+Może ona zakończyć się szybciej (działanie w locie) w przypadku formuły, która nie jest spełniana przez graf.
+W przeciwnym wypadku pobierane są kolejne stany aż do pełnej eksploracji.
+
+Po odwiedzeniu wszystkich węzłów w grafie następuje wykonanie weryfikacji odpowiadającej liniom 4-8 w algorytmie \ref{alg:detectAcceptingCycle} przez LV.
+Po tym etapie jednoznacznie wiadomo, czy formuła została spełniona.
+
+Kod prezentujący funkcjonalność realizowaną przez GB znajduje się w listingu \ref{lst:GB_pseudocode}.
+
+\begin{minipage}{\linewidth}
+\begin{lstlisting}[caption={Kod algorytmu realizowanego przez GB.},captionpos=b,label={lst:GB_pseudocode}]
+public VerificationState checkModel() {
+  Collection<SystemState> states = initialStates.initialStates();
+  List<StoredSystemState> saved = store.save(states).getNewlyStoredStates();
+  heuristic.newStates(saved);
+  VerificationId verificationId = verificationService.init(saved);
+  while (heuristic.hasMoreToExplore()) {
+    if (heuristic.shouldVisitState()) {
+      StoredSystemState toVisit = heuristic.nextStateToVisit();
+      Collection<Transition> transitions = description.allTransitionFromState(
+          toVisit.getSystemState());
+      heuristic.newTransitions(toVisit, transitions);
+    }
+    if (heuristic.shouldExploreTransition()) {
+      Pair<StoredSystemState, Transition> toExplore = 
+          heuristic.nextTransitionToExplore();
+      Collection<SystemState> reachableStates = description.allReachableStates(
+          toExplore.getFirst().getSystemState(), toExplore.getSecond());
+      StoredStatesResult result = store.save(reachableStates);
+      List<StoredSystemState> storedOnlyNewStates = result.getNewlyStoredStates();
+      if (!storedOnlyNewStates.isEmpty()) {
+        store.save(toExplore.getFirst(),
+            storedOnlyNewStates, toExplore.getSecond());
+        heuristic.newStates(storedOnlyNewStates);
+      }
+      List<StoredSystemState> storedOnlyOldStates = result.getAlreadyStoredStates();
+      if (!storedOnlyOldStates.isEmpty()) {
+        store.save(toExplore.getFirst(), storedOnlyOldStates,
+            toExplore.getSecond());
+      }
+      List<StoredSystemState> allReachableStates =
+          new ArrayList<>(storedOnlyNewStates);
+      allReachableStates.addAll(storedOnlyOldStates);
+      if (!allReachableStates.isEmpty()) {
+        VerificationResult verificationResult = verifyNewStates(
+            verificationId, toExplore, allReachableStates);
+        if (verificationResult.getVerificationState() == FORMULA_UNSATISFIED) {
+          return FORMULA_UNSATISFIED;
+        }
+      }
+    }
+  }
+  VerificationResult finishResult = verificationService.finish(verificationId);
+  return finishResult.getVerificationState();
+}
+\end{lstlisting}
+\end{minipage}
+
+% Osobny pseudokod dla GB, osobny dla LV
+% info w jakim to jezyku, technologie wykorzystane
+% po pseudokodzie opis bardziej techniczny, snippety kodu
+% dokladny opis co apka robi
+% opis całego API HTTP (pseudorestowego), opis verificationJobId
+
+
+\section{Specyfikacja formuły LTL} \label{sec:LTL_formula_spec}
+
+% Formuly LTL sprawdzane dzieki Matcherom hamcresta
+
+
+\section{LTL Verifier}
+
+% szczegoly interfejsu restowego, poprawic pseudokod w rozdziale 3
+
+
+\section{LTL to Büchi}
+
+% opis libki ltl2buchi https://github.com/fraimondi/ltl2buchi i jej integracji
+
+
+\section{Baza danych}
+
 % cassandra, jej wybor bo skalowana, ale tez wady (ACID), opis tabelek (z kolumnami)
