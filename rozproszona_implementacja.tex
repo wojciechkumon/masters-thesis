@@ -82,12 +82,6 @@ public VerificationState checkModel() {
 \end{lstlisting}
 \end{minipage}
 
-% Osobny pseudokod dla GB, osobny dla LV
-% info w jakim to jezyku, technologie wykorzystane
-% po pseudokodzie opis bardziej techniczny, snippety kodu
-% dokladny opis co apka robi
-% opis całego API HTTP (pseudorestowego), opis verificationJobId
-
 
 \section{Specyfikacja formuły LTL} \label{sec:LTL_formula_spec}
 
@@ -130,13 +124,133 @@ val formula = globally(bfsPcEq1 implies finally(bfsPcGt1))
 
 \section{LTL to Büchi} \label{sec:ltl2buchi}
 
-% TODO opis libki ltl2buchi https://github.com/fraimondi/ltl2buchi i jej integracji
-% + opis calego obiektu formuly, parsowania, fabryka nad tym itp
+Do obiektowej reprezentacji formuły wykorzystana została biblioteka \textit{ltl2buchi} \\(\url{https://github.com/fraimondi/ltl2buchi}).
+Pozwala ona na tworzenie formuł z dowolnymi twierdzeniami (wykorzystuje klasy generyczne).
+
+Jej główną funkcjonalnością jest ich konwersja do grafów reprezentujących uogólnione automaty Büchiego.
+Te są redukowane, degeneralizowane i znów redukowane.
+Brakuje jednak zautomatyzowanej możliwości poruszania się po tym automacie.
+
+Biblioteka wymagała zaadaptowania do potrzeb projektu.
+Wyodrębniona została funkcja konwertująca formułę do grafu (listing \ref{lst:formula_to_graph}).
+
+\begin{minipage}{\linewidth}
+\begin{lstlisting}[caption={Funkcja konwertująca formułę LTL do grafu.},captionpos=b,label={lst:formula_to_graph}]
+
+    <T> Graph<T> ltlToBuchiAutomaton(Formula<T> formula) {
+        val optimizedFormula = new Rewriter<>(formula).rewrite();
+        Graph<T> gba = Translator.translate(optimizedFormula);
+        Graph<T> reducedGba = SuperSetReduction.reduce(gba);
+        Graph<T> ba = Degeneralize.degeneralize(reducedGba);
+        Graph<T> sccReducedBa = SCCReduction.reduce(ba);
+        Graph<T> simplifiedBa = Simplify.simplify(sccReducedBa);
+        Graph<T> sfsReducedBa = SFSReduction.reduce(simplifiedBa);
+        Formula.resetStatic();
+        return sfsReducedBa;
+    }
+
+\end{lstlisting}
+\end{minipage}
+
+Drugim krokiem było stworzenie funkcji do budowania formuł, które wykorzystają potencjał Kotlina.
+Każdy operator dwuargumentowy otrzymał wersję infiksową.
+Kilka funkcji prezentuje listing \ref{lst:ltl_factory_extensions}.
+
+\begin{minipage}{\linewidth}
+\begin{lstlisting}[caption={Przykładowe funkcje do budowania formuł w języku Kotlin.},captionpos=b,label={lst:ltl_factory_extensions}]
+
+    infix fun <T> Formula<Matcher<T>>.and(right: Formula<Matcher<T>>)
+            : Formula<Matcher<T>> = LtlFactory.And(this, right)
+
+    infix fun <T> Formula<Matcher<T>>.implies(right: Formula<Matcher<T>>)
+            : Formula<Matcher<T>> = LtlFactory.Implies(this, right)
+
+    infix fun <T> Formula<Matcher<T>>.or(right: Formula<Matcher<T>>)
+            : Formula<Matcher<T>> = LtlFactory.Or(this, right)
+
+    fun <T> next(formula: Formula<Matcher<T>>): Formula<Matcher<T>>
+            = LtlFactory.Next(formula)
+
+    fun <T> globally(formula: Formula<Matcher<T>>): Formula<Matcher<T>>
+            = LtlFactory.Globally(formula)
+
+\end{lstlisting}
+\end{minipage}
+
+Najważniejsza część integracji to implementacja klasy automatu Büchiego, która umożliwi przechodzenie pomiędzy węzłami na podstawie kolejnego stanu systemu.
+Stworzony został algorytm, który wybiera krawędź, którą należy podążyć.
+Szukana jest taka, aby spełnić wszystkie stojące na jej straży wyrażenia.
+W tym celu eksploruje się wewnętrzną strukturę grafu, sprawdza listę wyrażeń oraz ich ewentualną negację.
+Następnie zwrócony zostaje nowy automat, którego aktualny węzeł, to ten znaleziony.
+
+Klasa pozwala także na sprawdzenie, czy aktualnie znajduje się w stanie akceptującym.
+Znajduje się tutaj również funkcja, która przyjmuje formułę, neguje ją oraz buduje automat Büchiego (zgodnie z listingiem \ref{lst:formula_to_graph}).
+Kod prezentujący powyższą funkcjonalność znajduje się w listingu \ref{lst:ltl_automaton}.
+
+\begin{minipage}{\linewidth}
+\begin{lstlisting}[caption={Implementacja automatu Büchiego.},captionpos=b,label={lst:ltl_automaton}]
+
+public class LtlAutomaton<T> {
+    private final Graph<Matcher<T>> buchiAutomaton;
+    private final Node<Matcher<T>> currentNode;
+
+    /* [...] */
+
+    public LtlAutomaton<T> nextState(T targetSystemState) {
+        val outgoingEdges = this.currentNode.getOutgoingEdges();
+        if (outgoingEdges.isEmpty()) {
+            throw new IllegalStateException("No more edges to follow");
+        }
+
+        Node<Matcher<T>> nextNode = outgoingEdges.stream()
+                .sorted(noGuardEdgeToTheEndComparator)
+                .filter(edge -> allGuardsMatch(targetSystemState, edge))
+                .findFirst()
+                .map(Edge::getNext)
+                .orElse(this.currentNode);
+
+        return new LtlAutomaton<>(this.buchiAutomaton, nextNode);
+    }
+
+    private boolean allGuardsMatch(Object system, Edge<Matcher<T>> edge) {
+        return edge.getGuard().stream().allMatch(guard -> {
+            val matches = guard.getAtom().matches(system);
+            return guard.isNegated() != matches;
+        });
+    }
+
+    public boolean isAccepting() {
+        return this.currentNode.getAttributes().getString(ACCEPTING_KEY) != null;
+    }
+
+    public static <T> LtlAutomaton<T> prepareAutomaton(
+            Formula<Matcher<T>> formulaToCheck) {
+        val negatedFormula = formulaToCheck.negate();
+        return newLtlAutomaton(negatedFormula);
+    }
+}
+
+\end{lstlisting}
+\end{minipage}
+
+\newpage
 
 \section{LTL Verifier}
 
+Xxx
 % szczegoly interfejsu restowego, poprawic pseudokod w rozdziale 3
+% kod z formula 
+
 
 \section{Baza danych}
 
 % cassandra, jej wybor bo skalowana, ale tez wady (ACID), opis tabelek (z kolumnami)
+
+
+
+
+% Osobny pseudokod dla GB, osobny dla LV
+% info w jakim to jezyku, technologie wykorzystane
+% po pseudokodzie opis bardziej techniczny, snippety kodu
+% dokladny opis co apka robi
+% opis całego API HTTP (pseudorestowego), opis verificationId
