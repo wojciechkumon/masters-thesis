@@ -104,10 +104,10 @@ Obiekt formuły opisany został w sekcji \ref{sec:ltl2buchi}.
 Do porównywania wartości wykorzystana została biblioteka \textit{Hamcrest} (\url{http://hamcrest.org}).
 Oferuje ona bogaty zestaw komparatorów, możliwość ich łączenia i testowania na dowolnym obiekcie systemu.
 
-Przykładowe formuły prezentuje listing \ref{lst:kotlin_formulas}.
+Przykładową formułę prezentuje listing \ref{lst:kotlin_formulas}.
 
 \begin{minipage}{\linewidth}
-\begin{lstlisting}[caption={Przykładowe formuły LTL w języku Kotlin.},captionpos=b,label={lst:kotlin_formulas}]
+\begin{lstlisting}[caption={Przykładowa formuły LTL w języku Kotlin.},captionpos=b,label={lst:kotlin_formulas}]
 
 val bfsPcEq1 = proposition(hasProperty<SystemState>("bfsHeuristicState", 
         hasProperty<Int>("pc", equalTo(1))))
@@ -118,8 +118,6 @@ val formula = globally(bfsPcEq1 implies finally(bfsPcGt1))
 
 \end{lstlisting}
 \end{minipage}
-
-% TODO zapytać o sensowne formuły
 
 
 \section{LTL to Büchi} \label{sec:ltl2buchi}
@@ -235,16 +233,26 @@ public class LtlAutomaton<T> {
 
 \newpage
 
-\section{LTL Verifier}
+\section{Weryfikator LTL}
 
-Xxx
-% szczegoly interfejsu restowego, poprawic pseudokod w rozdziale 3
-% kod z formula 
+Najważniejsza część algorytmu znajduje się w LV.
+To bezstanowa aplikacja serwerowa, która wystawia interfejs przez protokół HTTP.
+Możliwe są trzy typy zapytań:
+\begin{itemize}
+\item Inicjujące - przyjmuje stany początkowe oraz formułę do sprawdzenia, po czym inicjuje algorytm. Ponadto zwraca \textit{VerificationId}, czyli identyfikator weryfikacji, który będzie potrzebny w kolejnych zapytaniach.
+\item Odbierające kolejne stany systemu - to element weryfikacji w locie, która może się zakończyć na tym etapie. W takim przypadku zwracana jest stosowana informacja do klienta. To jedyne zapytanie, które wykonuje się wielokrotnie dla jednej formuły (ilość zależna od wielkości grafu ze stanami systemu).
+\item Finalizujące weryfikację - wykorzystywane, kiedy cały graf stanów został zeksplorowany, a formuła jest spełniona lub zastosowana heurystyka nie znalazła kontrprzykładu. Wykonana zostaje pozostała część algorytmu.
+\end{itemize}
+
+
+% TODO napisac o serwisach ogarniajacych odczyt/zapis z casasndry
+% StoredLtlAutomaton opis pol, poprzednik, stan do ktorego pasuje itp
+
 
 
 \section{Baza danych}
 
-% cassandra, jej wybor bo skalowana, ale tez wady (ACID), opis tabelek (z kolumnami)
+% cassandra, jej wybor bo skalowalna, ale tez wady (ACID), opis tabelek (z kolumnami)
 
 
 

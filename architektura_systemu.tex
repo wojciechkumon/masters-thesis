@@ -44,12 +44,12 @@ Interfejs implementowany przez LV opisuje listing \ref{lst:ltl_verifier_interfac
 
 \begin{lstlisting}[caption={Interfejs implementowany przez LV.},captionpos=b,label={lst:ltl_verifier_interface}]
     public interface LtlVerifier {
-        public VerificationJobId createVerificationJob(List<State> initialStates);
+        VerificationId createVerificationJob(VerificationInit verificationInit);
 
-        public VerificationResult newStates(NewStates newStates,
-                                            VerificationJobId id);
+        VerificationResult newStates(NewStates newStates,
+                                     VerificationId id);
 
-        public VerificationResult finish(VerificationJobId id);
+        VerificationResult finish(VerificationId id);
     }
 \end{lstlisting}
 
