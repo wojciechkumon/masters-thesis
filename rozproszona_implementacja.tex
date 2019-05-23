@@ -30,6 +30,7 @@ W przeciwnym wypadku pobierane są kolejne stany aż do pełnej eksploracji.
 
 Po odwiedzeniu wszystkich węzłów w grafie następuje wykonanie weryfikacji odpowiadającej liniom 4-8 w algorytmie \ref{alg:detectAcceptingCycle} przez LV.
 Po tym etapie jednoznacznie wiadomo, czy formuła została spełniona.
+Linie odwołujące się do \textit{verificationService} sprowadzają się wykonania zapytań do LV.
 
 Kod prezentujący funkcjonalność realizowaną przez GB znajduje się w listingu \ref{lst:GB_pseudocode}.
 
@@ -68,7 +69,7 @@ public VerificationState checkModel() {
           new ArrayList<>(storedOnlyNewStates);
       allReachableStates.addAll(storedOnlyOldStates);
       if (!allReachableStates.isEmpty()) {
-        VerificationResult verificationResult = verifyNewStates(
+        VerificationResult verificationResult = verificationService.verifyNewStates(
             verificationId, toExplore, allReachableStates);
         if (verificationResult.getVerificationState() == FORMULA_UNSATISFIED) {
           return FORMULA_UNSATISFIED;
@@ -233,6 +234,7 @@ public class LtlAutomaton<T> {
 
 \newpage
 
+
 \section{Weryfikator LTL}
 
 Najważniejsza część algorytmu znajduje się w LV.
@@ -244,21 +246,164 @@ Możliwe są trzy typy zapytań:
 \item Finalizujące weryfikację - wykorzystywane, kiedy cały graf stanów został zeksplorowany, a formuła jest spełniona lub zastosowana heurystyka nie znalazła kontrprzykładu. Wykonana zostaje pozostała część algorytmu.
 \end{itemize}
 
+Wszystkie elementy algorytmu, które należy współdzielić pomiędzy zapytaniami, przechowywane są w bazie danych.
+Stworzone zostały serwisy, które obsługują tę funkcjonalność dla zbioru stanów poprzedzających cykl, wartości algorytmu MAP, czy samych automatów Büchiego.
+
+
+\subsection{Inicjajcja weryfikacji modelowej}
+
+Tutaj generowany jest identyfikator weryfikacji, a stany początkowe aplikowane są do automatu Büchiego.
+Każdy z nich (po wykonaniu tranzycji) zostaje zapisany w bazie danych.
+Ponadto stany systemu trafią do zbioru stanów poprzedzających cykl.
+W listingu \ref{lst:initializeModelChecking} znajduje się kod implementujący tę funkcjonalność.
+
+\begin{minipage}{\linewidth}
+\begin{lstlisting}[caption={Kod obsługujący inicjację weryfikacji modelowej.},captionpos=b,label={lst:initializeModelChecking}]
+
+public VerificationId initializeModelChecking(LtlAutomaton<SystemState> automaton,
+                                              List<String> initialStateHashes) {
+    val verificationId = new VerificationId();
+    initialStateHashes.stream()
+            .map(systemStatesService::findStateByHash)
+            .map(targetState -> {
+                val nextState = automaton.nextState(targetState.getSystemState());
+                return new StoredLtlAutomaton(verificationId, nextState,
+                        targetState.getHash());
+            })
+            .peek(this::addToApproxSet)
+            .forEach(ltlAutomatonRepository::save);
+    return verificationId;
+}
+
+\end{lstlisting}
+\end{minipage}
+
+
+\subsection{Weryfikacja eksplorowanych stanów}
+
+% TODO opis checkStates, on-the-fly + parallel()
+
+Listing \ref{lst:checkNewStates}.
+
+\begin{minipage}{\linewidth}
+\begin{lstlisting}[caption={Implementacja heurystyki pozwalającej na weryfikację modelową w locie.},captionpos=b,label={lst:checkNewStates}]
+public boolean checkNewStates(NewStates newStates, VerificationId verificationId) {
+  String sourceStateHash = newStates.getSourceStateHash();
+  StoredLtlAutomaton storedLtlAutomaton = findSavedLtlAutomaton(verificationId,
+                                                                sourceStateHash);
+  return newStates.getReachableStatesHashes().stream().parallel()
+      .map(systemStatesService::findStateByHash)
+      .map(targetState -> toNextStateAutomaton(verificationId, storedLtlAutomaton,
+                                               targetState))
+      .peek(this::addToApproxSet)
+      .map(ltlAutomatonRepository::save)
+      .anyMatch(ltlAutomaton -> runMapAlgorithm(sourceStateHash, ltlAutomaton));
+}
+
+private boolean runMapAlgorithm(String sourceStateHash,
+                                StoredLtlAutomaton ltlAutomaton) {
+  String targetStateHash = ltlAutomaton.getMatchingStateHash();
+  VerificationId verificationId = ltlAutomaton.getVerificationId();
+  String sourceStateMap =
+      mapAlgorithmService.getMap(verificationId, sourceStateHash);
+  if (ltlAutomaton.getLtlAutomaton().isAccepting()) {
+    if (targetStateHash.equals(sourceStateHash) ||
+            targetStateHash.equals(sourceStateMap)) {
+        log.info(buildAcceptingPath(ltlAutomaton));
+        return true;
+    }
+    mapAlgorithmService.setMap(verificationId, targetStateHash,
+        mapAlgorithmService.getMaxMap(targetStateHash, sourceStateMap));
+  } else {
+    mapAlgorithmService.setMap(verificationId, targetStateHash, sourceStateMap);
+  }
+  return false;
+}
+
+\end{lstlisting}
+\end{minipage}
+
+
+\subsection{Finalizacja weryfikacji modelowej}
+
+Listing \ref{lst:finishAlgorithm}, \ref{lst:eliminateNoAcceptingStates} i \ref{lst:eliminateNoPredecessorsStates}.
+
+\begin{minipage}{\linewidth}
+\begin{lstlisting}[caption={Kod obsługujący algorytm w przypadku, gdy nie zakończy się wcześniej.},captionpos=b,label={lst:finishAlgorithm}]
+public boolean finishAlgorithm(VerificationId verificationId) {
+  int oldSize = Integer.MAX_VALUE;
+  while (true) {
+    int approxSetSize = approximationSetService.size(verificationId);
+    if (approxSetSize == oldSize || approxSetSize <= 0) {
+      break;
+    }
+    oldSize = approxSetSize;
+    eliminateNoAccepting(verificationId);
+    eliminateNoPredecessors(verificationId);
+  }
+  return approximationSetService.size(verificationId) > 0;
+}
+\end{lstlisting}
+\end{minipage}
+
+\begin{minipage}{\linewidth}
+\begin{lstlisting}[caption={Implementacja funkcji usuwającej stany nieakceptujące ze zbioru.},captionpos=b,label={lst:eliminateNoAcceptingStates}]
+private void eliminateNoAccepting(String verificationId) {
+  Queue<String> hashesQueue = new ArrayDeque<>();
+  approximationSetService.streamAllStateHashes(verificationId)
+      .filter(stateHash -> isAcceptingState(verificationId, stateHash))
+      .forEach(stateHash -> {
+        hashesQueue.offer(stateHash);
+        approximationSetService.zeroPredecessorCount(verificationId, stateHash);
+      });
+  while (!hashesQueue.isEmpty()) {
+    String sourceStateHash = hashesQueue.poll();
+    findSuccessorStateHashes(sourceStateHash).forEach(targetStateHash -> {
+          if (approximationSetService.contains(verificationId, targetStateHash)) {
+            approximationSetService.incrementPredecessorCount(verificationId,
+                                                              targetStateHash);
+          } else {
+            hashesQueue.offer(targetStateHash);
+            approximationSetService.add(verificationId, targetStateHash);
+            approximationSetService.zeroPredecessorCount(verificationId,
+                                                         targetStateHash);
+          }
+        });
+  }
+}
+\end{lstlisting}
+\end{minipage}
+\begin{minipage}{\linewidth}
+\begin{lstlisting}[caption={Implementacja funkcji usuwającej stany niemające poprzedników ze zbioru.},captionpos=b,label={lst:eliminateNoPredecessorsStates}]
+private void eliminateNoPredecessors(String verificationId) {
+  Queue<String> hashesQueue = new ArrayDeque<>();
+  approximationSetService.streamAllStateHashes(verificationId)
+      .filter(stateHash -> approximationSetService
+          .getPredecessorCount(verificationId, stateHash) == 0)
+      .forEach(hashesQueue::offer);
+  while (!hashesQueue.isEmpty()) {
+    String sourceStateHash = hashesQueue.poll();
+    approximationSetService.remove(verificationId, sourceStateHash);
+    findSuccessorStateHashes(sourceStateHash).forEach(targetStateHash -> {
+          approximationSetService.decrementPredecessorCount(verificationId
+                                                            targetStateHash);
+          if (approximationSetService
+              .getPredecessorCount(verificationId, targetStateHash) == 0) {
+            hashesQueue.offer(targetStateHash);
+          }
+        });
+  }
+}
+\end{lstlisting}
+\end{minipage}
 
 % TODO napisac o serwisach ogarniajacych odczyt/zapis z casasndry
 % StoredLtlAutomaton opis pol, poprzednik, stan do ktorego pasuje itp
-
 
 
 \section{Baza danych}
 
 % cassandra, jej wybor bo skalowalna, ale tez wady (ACID), opis tabelek (z kolumnami)
 
-
-
-
-% Osobny pseudokod dla GB, osobny dla LV
-% info w jakim to jezyku, technologie wykorzystane
-% po pseudokodzie opis bardziej techniczny, snippety kodu
 % dokladny opis co apka robi
 % opis całego API HTTP (pseudorestowego), opis verificationId
