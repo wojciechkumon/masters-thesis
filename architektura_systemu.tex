@@ -29,12 +29,13 @@ Jako jedyny dostarcza dane, dzięki którym da się zbudować całą przestrzeń
 GP spełnia prosty interfejs przedstawiony w listingu \ref{lst:graph_provider_interface}.
 
 \begin{lstlisting}[caption={Interfejs implementowany przez GP.},captionpos=b,label={lst:graph_provider_interface}]
-    public interface GraphProvider {
-        Collection<Transition> allTransitionFromState(SystemState from);
 
-        Collection<SystemState> allReachableStates(SystemState from,
-                                                   Transition through);
-    }
+  public interface GraphProvider {
+    Collection<Transition> allTransitionFromState(SystemState from);
+
+    Collection<SystemState> allReachableStates(SystemState from,
+                                               Transition through);
+  }
 \end{lstlisting}
 
 \textit{LTL Verifier} (\textbf{LV}) to główna serwerowa aplikacja zajmująca się weryfikacją modelową i zawiera główną część tego algorytmu.
@@ -43,14 +44,15 @@ Napisana została w języku Java z wykorzystaniem frameworka Spring.
 Interfejs implementowany przez LV opisuje listing \ref{lst:ltl_verifier_interface}.
 
 \begin{lstlisting}[caption={Interfejs implementowany przez LV.},captionpos=b,label={lst:ltl_verifier_interface}]
-    public interface LtlVerifier {
-        VerificationId createVerificationJob(VerificationInit verificationInit);
 
-        VerificationResult newStates(NewStates newStates,
-                                     VerificationId id);
+  public interface LtlVerifier {
+    VerificationId createVerificationJob(VerificationInit verificationInit);
 
-        VerificationResult finish(VerificationId id);
-    }
+    VerificationResult newStates(NewStates newStates,
+                                 VerificationId id);
+
+    VerificationResult finish(VerificationId id);
+  }
 \end{lstlisting}
 
 \textit{Graph Builder} (\textbf{GB}) spełnia rolę serca systemu.

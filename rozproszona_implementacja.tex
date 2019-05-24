@@ -116,7 +116,6 @@ val bfsPcGt1 = proposition(hasProperty<SystemState>("bfsHeuristicState",
         hasProperty<Int>("pc", greaterThan(1))))
 val formula = globally(bfsPcEq1 implies finally(bfsPcGt1))
 
-
 \end{lstlisting}
 \end{minipage}
 
@@ -135,18 +134,17 @@ Wyodrębniona została funkcja konwertująca formułę do grafu (listing \ref{ls
 
 \begin{minipage}{\linewidth}
 \begin{lstlisting}[caption={Funkcja konwertująca formułę LTL do grafu.},captionpos=b,label={lst:formula_to_graph}]
-
-    <T> Graph<T> ltlToBuchiAutomaton(Formula<T> formula) {
-        val optimizedFormula = new Rewriter<>(formula).rewrite();
-        Graph<T> gba = Translator.translate(optimizedFormula);
-        Graph<T> reducedGba = SuperSetReduction.reduce(gba);
-        Graph<T> ba = Degeneralize.degeneralize(reducedGba);
-        Graph<T> sccReducedBa = SCCReduction.reduce(ba);
-        Graph<T> simplifiedBa = Simplify.simplify(sccReducedBa);
-        Graph<T> sfsReducedBa = SFSReduction.reduce(simplifiedBa);
-        Formula.resetStatic();
-        return sfsReducedBa;
-    }
+  <T> Graph<T> ltlToBuchiAutomaton(Formula<T> formula) {
+    val optimizedFormula = new Rewriter<>(formula).rewrite();
+    Graph<T> gba = Translator.translate(optimizedFormula);
+    Graph<T> reducedGba = SuperSetReduction.reduce(gba);
+    Graph<T> ba = Degeneralize.degeneralize(reducedGba);
+    Graph<T> sccReducedBa = SCCReduction.reduce(ba);
+    Graph<T> simplifiedBa = Simplify.simplify(sccReducedBa);
+    Graph<T> sfsReducedBa = SFSReduction.reduce(simplifiedBa);
+    Formula.resetStatic();
+    return sfsReducedBa;
+  }
 
 \end{lstlisting}
 \end{minipage}
@@ -158,20 +156,20 @@ Kilka funkcji prezentuje listing \ref{lst:ltl_factory_extensions}.
 \begin{minipage}{\linewidth}
 \begin{lstlisting}[caption={Przykładowe funkcje do budowania formuł w języku Kotlin.},captionpos=b,label={lst:ltl_factory_extensions}]
 
-    infix fun <T> Formula<Matcher<T>>.and(right: Formula<Matcher<T>>)
-            : Formula<Matcher<T>> = LtlFactory.And(this, right)
+  infix fun <T> Formula<Matcher<T>>.and(right: Formula<Matcher<T>>)
+      : Formula<Matcher<T>> = LtlFactory.And(this, right)
 
-    infix fun <T> Formula<Matcher<T>>.implies(right: Formula<Matcher<T>>)
-            : Formula<Matcher<T>> = LtlFactory.Implies(this, right)
+  infix fun <T> Formula<Matcher<T>>.implies(right: Formula<Matcher<T>>)
+      : Formula<Matcher<T>> = LtlFactory.Implies(this, right)
 
-    infix fun <T> Formula<Matcher<T>>.or(right: Formula<Matcher<T>>)
-            : Formula<Matcher<T>> = LtlFactory.Or(this, right)
+  infix fun <T> Formula<Matcher<T>>.or(right: Formula<Matcher<T>>)
+      : Formula<Matcher<T>> = LtlFactory.Or(this, right)
 
-    fun <T> next(formula: Formula<Matcher<T>>): Formula<Matcher<T>>
-            = LtlFactory.Next(formula)
+  fun <T> next(formula: Formula<Matcher<T>>): Formula<Matcher<T>>
+      = LtlFactory.Next(formula)
 
-    fun <T> globally(formula: Formula<Matcher<T>>): Formula<Matcher<T>>
-            = LtlFactory.Globally(formula)
+  fun <T> globally(formula: Formula<Matcher<T>>): Formula<Matcher<T>>
+      = LtlFactory.Globally(formula)
 
 \end{lstlisting}
 \end{minipage}
@@ -188,45 +186,44 @@ Kod prezentujący powyższą funkcjonalność znajduje się w listingu \ref{lst:
 
 \begin{minipage}{\linewidth}
 \begin{lstlisting}[caption={Implementacja automatu Büchiego.},captionpos=b,label={lst:ltl_automaton}]
-
 public class LtlAutomaton<T> {
-    private final Graph<Matcher<T>> buchiAutomaton;
-    private final Node<Matcher<T>> currentNode;
+  private final Graph<Matcher<T>> buchiAutomaton;
+  private final Node<Matcher<T>> currentNode;
 
-    /* [...] */
+  /* [...] */
 
-    public LtlAutomaton<T> nextState(T targetSystemState) {
-        val outgoingEdges = this.currentNode.getOutgoingEdges();
-        if (outgoingEdges.isEmpty()) {
-            throw new IllegalStateException("No more edges to follow");
-        }
-
-        Node<Matcher<T>> nextNode = outgoingEdges.stream()
-                .sorted(noGuardEdgeToTheEndComparator)
-                .filter(edge -> allGuardsMatch(targetSystemState, edge))
-                .findFirst()
-                .map(Edge::getNext)
-                .orElse(this.currentNode);
-
-        return new LtlAutomaton<>(this.buchiAutomaton, nextNode);
+  public LtlAutomaton<T> nextState(T targetSystemState) {
+    val outgoingEdges = this.currentNode.getOutgoingEdges();
+    if (outgoingEdges.isEmpty()) {
+      throw new IllegalStateException("No more edges to follow");
     }
 
-    private boolean allGuardsMatch(Object system, Edge<Matcher<T>> edge) {
-        return edge.getGuard().stream().allMatch(guard -> {
-            val matches = guard.getAtom().matches(system);
-            return guard.isNegated() != matches;
-        });
-    }
+    Node<Matcher<T>> nextNode = outgoingEdges.stream()
+        .sorted(noGuardEdgeToTheEndComparator)
+        .filter(edge -> allGuardsMatch(targetSystemState, edge))
+        .findFirst()
+        .map(Edge::getNext)
+        .orElse(this.currentNode);
 
-    public boolean isAccepting() {
-        return this.currentNode.getAttributes().getString(ACCEPTING_KEY) != null;
-    }
+    return new LtlAutomaton<>(this.buchiAutomaton, nextNode);
+  }
 
-    public static <T> LtlAutomaton<T> prepareAutomaton(
-            Formula<Matcher<T>> formulaToCheck) {
-        val negatedFormula = formulaToCheck.negate();
-        return newLtlAutomaton(negatedFormula);
-    }
+  private boolean allGuardsMatch(Object system, Edge<Matcher<T>> edge) {
+    return edge.getGuard().stream().allMatch(guard -> {
+      val matches = guard.getAtom().matches(system);
+      return guard.isNegated() != matches;
+    });
+  }
+
+  public boolean isAccepting() {
+    return this.currentNode.getAttributes().getString(ACCEPTING_KEY) != null;
+  }
+
+  public static <T> LtlAutomaton<T> prepareAutomaton(
+          Formula<Matcher<T>> formulaToCheck) {
+    val negatedFormula = formulaToCheck.negate();
+    return newLtlAutomaton(negatedFormula);
+  }
 }
 
 \end{lstlisting}
@@ -262,17 +259,17 @@ W listingu \ref{lst:initializeModelChecking} znajduje się kod implementujący t
 
 public VerificationId initializeModelChecking(LtlAutomaton<SystemState> automaton,
                                               List<String> initialStateHashes) {
-    val verificationId = new VerificationId();
-    initialStateHashes.stream()
-            .map(systemStatesService::findStateByHash)
-            .map(targetState -> {
-                val nextState = automaton.nextState(targetState.getSystemState());
-                return new StoredLtlAutomaton(verificationId, nextState,
-                        targetState.getHash());
-            })
-            .peek(this::addToApproxSet)
-            .forEach(ltlAutomatonRepository::save);
-    return verificationId;
+  val verificationId = new VerificationId();
+  initialStateHashes.stream()
+      .map(systemStatesService::findStateByHash)
+      .map(targetState -> {
+        val nextState = automaton.nextState(targetState.getSystemState());
+        return new StoredLtlAutomaton(verificationId, nextState,
+            targetState.getHash());
+      })
+      .peek(this::addToApproxSet)
+      .forEach(ltlAutomatonRepository::save);
+  return verificationId;
 }
 
 \end{lstlisting}
