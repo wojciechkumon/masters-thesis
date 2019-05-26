@@ -278,9 +278,14 @@ public VerificationId initializeModelChecking(LtlAutomaton<SystemState> automato
 
 \subsection{Weryfikacja eksplorowanych stanów}
 
-% TODO opis checkStates, on-the-fly + parallel()
+Wielokrotnie wykonywanym zapytaniem jest to, które weryfikuje nowe stany systemu.
+Pozwala zakończyć sprawdzanie formuły LTL, jeśli znajdzie się akceptujący cykl dla jej zaprzeczenia.
 
-Listing \ref{lst:checkNewStates}.
+Parametry wejściowe to lista nowych stanów, stan źródłowy, z którego one wychodzą oraz identyfikator weryfikacji.
+Działanie zaczyna się od pobrania z bazy danych automatu Büchiego, który odpowiada źródle.
+Następnie przetwarzana jest cała lista nowych stanów w sposób równoległy, co pozwoli przyspieszyć wykonanie algorytmu.
+Można było zastosować to podejście, ponieważ nie ma tu żadnej operacji, która modyfikuje wspólny zasób.
+Wszystkie działania są rozłączne.
 
 \begin{minipage}{\linewidth}
 \begin{lstlisting}[caption={Implementacja heurystyki pozwalającej na weryfikację modelową w locie.},captionpos=b,label={lst:checkNewStates}]
@@ -319,6 +324,13 @@ private boolean runMapAlgorithm(String sourceStateHash,
 
 \end{lstlisting}
 \end{minipage}
+
+Dla każdego stanu uzyskuje się odpowiadający mu automat Büchiego (aplikując stan systemu do automatu źródłowego).
+Kolejnym krok to dodanie do zbioru stanów poprzedzających cykl, po czym następuje kluczowy moment, czyli heurystyka oparta na algorytmie MAP.
+W przypadku wierzchołka akceptującego sprawdza się, czy nie został zamknięty cykl akceptujący.
+Gdy do tego dojdzie, następuje zakończenie algorytmu, poinformowanie o tym klienta oraz wypisanie całej ścieżki od liścia do korzenia, która spowodowała niespełnienie zadanej formuły LTL. Całość działa to zgodnie z opisem w sekcji \ref{heuristic}.
+
+W pozostałych przypadkach (kiedy nie wykryto akceptującego cyklu) obliczane są kolejne wartości dla algorytmu MAP. Implementacja została zawarta w listingu \ref{lst:checkNewStates}.
 
 
 \subsection{Finalizacja weryfikacji modelowej}
@@ -401,6 +413,4 @@ private void eliminateNoPredecessors(String verificationId) {
 \section{Baza danych}
 
 % cassandra, jej wybor bo skalowalna, ale tez wady (ACID), opis tabelek (z kolumnami)
-
-% dokladny opis co apka robi
-% opis całego API HTTP (pseudorestowego), opis verificationId
+% opis całego API HTTP (pseudorestowego)
