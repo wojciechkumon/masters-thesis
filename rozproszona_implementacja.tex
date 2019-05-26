@@ -335,7 +335,19 @@ W pozostałych przypadkach (kiedy nie wykryto akceptującego cyklu) obliczane s�
 
 \subsection{Finalizacja weryfikacji modelowej}
 
-Listing \ref{lst:finishAlgorithm}, \ref{lst:eliminateNoAcceptingStates} i \ref{lst:eliminateNoPredecessorsStates}.
+W przypadku, gdy nie dochodzi do wczesnego zakończenia algorytmu, a cała przestrzeń stanów została już wygenerowana, należy dokończyć sprawdzanie, zgodnie z OWCTY.
+Jedyny argument wymagany od klienta to identyfikator weryfikacji.
+Powala on na uzyskiwanie stanów w zbiorze poprzedników cyklu akceptującego.
+Kolejne operacje na zbiorze wykonywane są w pętli do czasu, gdy przestaną zachodzić w nim zmiany lub okaże się pusty.
+Brak elementów oznacza, że nie ma cyklu akceptującego. 
+Przedstawia to listing \ref{lst:finishAlgorithm}.
+
+Ze zbioru najpierw usuwane są stany nieakceptujące, po czym dodaje się do niego następniki pozostałych oraz ustala wartości liczby poprzedników (listing \ref{lst:eliminateNoAcceptingStates}).
+
+Druga wykorzystywana funkcja to \textit{eliminateNoPredecessors} - jej implementacja znajduje się w listing \ref{lst:eliminateNoPredecessorsStates}.
+Jej zadanie polega na usunięciu ze zbioru wszystkich stanów, które nie mają poprzedników.
+Co więcej, dla następników takich stanów, zmniejszana jest ich liczba poprzedników.
+Jeśli spadnie ona do zera, całość powtarza się rekurencyjnie dla takich stanów.
 
 \begin{minipage}{\linewidth}
 \begin{lstlisting}[caption={Kod obsługujący algorytm w przypadku, gdy nie zakończy się wcześniej.},captionpos=b,label={lst:finishAlgorithm}]
@@ -360,22 +372,22 @@ public boolean finishAlgorithm(VerificationId verificationId) {
 private void eliminateNoAccepting(String verificationId) {
   Queue<String> hashesQueue = new ArrayDeque<>();
   approximationSetService.streamAllStateHashes(verificationId)
-      .filter(stateHash -> isAcceptingState(verificationId, stateHash))
       .forEach(stateHash -> {
-        hashesQueue.offer(stateHash);
-        approximationSetService.zeroPredecessorCount(verificationId, stateHash);
+        if (isAcceptingState(verificationId, stateHash)) {
+          hashesQueue.offer(stateHash);
+          approximationSetService.zeroPredecessorCount(verificationId, stateHash);
+        } else { approximationSetService.remove(verificationId, stateHash); }
       });
   while (!hashesQueue.isEmpty()) {
     String sourceStateHash = hashesQueue.poll();
-    findSuccessorStateHashes(sourceStateHash).forEach(targetStateHash -> {
-          if (approximationSetService.contains(verificationId, targetStateHash)) {
+    findSuccessorStateHashes(sourceStateHash).forEach(stateHash -> {
+          if (approximationSetService.contains(verificationId, stateHash)) {
             approximationSetService.incrementPredecessorCount(verificationId,
-                                                              targetStateHash);
+                                                              stateHash);
           } else {
-            hashesQueue.offer(targetStateHash);
-            approximationSetService.add(verificationId, targetStateHash);
-            approximationSetService.zeroPredecessorCount(verificationId,
-                                                         targetStateHash);
+            hashesQueue.offer(stateHash);
+            approximationSetService.add(verificationId, stateHash);
+            approximationSetService.zeroPredecessorCount(verificationId, stateHash);
           }
         });
   }
@@ -393,12 +405,12 @@ private void eliminateNoPredecessors(String verificationId) {
   while (!hashesQueue.isEmpty()) {
     String sourceStateHash = hashesQueue.poll();
     approximationSetService.remove(verificationId, sourceStateHash);
-    findSuccessorStateHashes(sourceStateHash).forEach(targetStateHash -> {
+    findSuccessorStateHashes(sourceStateHash).forEach(stateHash -> {
           approximationSetService.decrementPredecessorCount(verificationId
-                                                            targetStateHash);
+                                                            stateHash);
           if (approximationSetService
-              .getPredecessorCount(verificationId, targetStateHash) == 0) {
-            hashesQueue.offer(targetStateHash);
+              .getPredecessorCount(verificationId, stateHash) == 0) {
+            hashesQueue.offer(stateHash);
           }
         });
   }
