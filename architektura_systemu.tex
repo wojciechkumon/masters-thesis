@@ -2,9 +2,23 @@
 
 Założeniem projektu było stworzenie algorytmu weryfikacji modelowej w oparciu o własności LTL dla języka Alvis w środowisku rozproszonym.
 
+
+\section{Alvis}
+
 Alvis to język formalny, którego celem jest dostarczenie elastyczności w modelowaniu systemów współbieżnych i czasu rzeczywistego wraz z możliwością weryfikacji opartej o metody formalne.
-Stanowi połączenie zalet języków wysokiego poziomu z graficznym budowaniem zależności między podsystemami (nazywanymi agentami).
-% TODO jak dużo o Alvisie takiego wstępu?
+Jego nazwa pochodzi od połączenia słów \textbf{al}gebra i \textbf{vis}ual.
+To łatwy w użyciu dla inżynierów formalny język modelowania.
+Oferuje także język wizualny do projektowania struktur.
+Za pomocą Alvisa modelować można systemy współbieżne, czasu rzeczywistego, wbudowane oraz rozproszone.
+
+Model Alvisa to system agentów, który zazwyczaj działają współbieżnie, komunikują się między sobą, konkurują o współdzielone zasoby itp.
+Agenty dzielą się na aktywne i pasywne.
+Zachowanie każdego z nich definiuje się w warstwie kodu, którego konstrukcje przypominają języki wysokiego poziomu.
+
+% TODO kilka zdan o modelu, dla ktorego jest weryfikacja
+% model systemu to zbior agentow, ktore odpowiadaja dzialaniu aplikacji buildera
+% w ich sklad wchodzi m.in. stan heurystyki przeszukiowania BFS, cassandry, czy opisu grafu
+% Dla tego modelu tworzone będą formuły LTL, które powinien spełnić.
 
 
 \section{System rozproszony}
@@ -28,6 +42,7 @@ Serwis ten enkapsuluje działanie całej domeny.
 Jako jedyny dostarcza dane, dzięki którym da się zbudować całą przestrzeń stanów.
 GP spełnia prosty interfejs przedstawiony w listingu \ref{lst:graph_provider_interface}.
 
+\begin{minipage}{\linewidth}
 \begin{lstlisting}[caption={Interfejs implementowany przez GP.},captionpos=b,label={lst:graph_provider_interface}]
 
   public interface GraphProvider {
@@ -37,6 +52,7 @@ GP spełnia prosty interfejs przedstawiony w listingu \ref{lst:graph_provider_in
                                                Transition through);
   }
 \end{lstlisting}
+\end{minipage}
 
 \textit{LTL Verifier} (\textbf{LV}) to główna serwerowa aplikacja zajmująca się weryfikacją modelową i zawiera główną część tego algorytmu.
 Konwertuje ona także formuły LTL do automatów Büchiego.
