@@ -99,7 +99,7 @@ Wspierać należało porównywanie dowolnych wartości modelu na różne sposoby
 Zamiast tworzenia własnego języka, wykorzystany został Kotlin poprzez jego silnik skryptowy.
 Pozwala na nieograniczoną elastyczność w tworzeniu formuł.
 Kod wykonywany jest locie i zamieniany na reprezentację obiektową.
-Jego składnia pozwala na elegancką notację z wykorzystaniem operatorów infiksowych.
+Jego składnia pozwala na elegancką notację z użyciem operatorów infiksowych.
 
 Obiekt formuły opisany został w sekcji \ref{sec:ltl2buchi}.
 Do porównywania wartości wykorzystana została biblioteka \textit{Hamcrest} (\url{http://hamcrest.org}).
@@ -123,7 +123,7 @@ val formula = globally(bfsPcEq1 implies finally(bfsPcGt1))
 \section{LTL to Büchi} \label{sec:ltl2buchi}
 
 Do obiektowej reprezentacji formuły wykorzystana została biblioteka \textit{ltl2buchi} \\(\url{https://github.com/fraimondi/ltl2buchi}).
-Pozwala ona na tworzenie formuł z dowolnymi twierdzeniami (wykorzystuje klasy generyczne).
+Pozwala ona na tworzenie formuł z dowolnymi twierdzeniami (używa klas generycznych).
 
 Jej główną funkcjonalnością jest ich konwersja do grafów reprezentujących uogólnione automaty Büchiego.
 Te są redukowane, degeneralizowane i znów redukowane.
@@ -418,11 +418,58 @@ private void eliminateNoPredecessors(String verificationId) {
 \end{lstlisting}
 \end{minipage}
 
-% TODO napisac o serwisach ogarniajacych odczyt/zapis z casasndry
-% StoredLtlAutomaton opis pol, poprzednik, stan do ktorego pasuje itp
-
 
 \section{Baza danych}
 
-% cassandra, jej wybor bo skalowalna, ale tez wady (ACID), opis tabelek (z kolumnami)
-% opis całego API HTTP (pseudorestowego)
+Funkcjonalność magazynu danych w systemie realizuje \textit{Apache Cassandra} (\url{https://cassandra.apache.org}).
+To rozproszona baza NoSQL zaprojektowana do obsługi dużych zestawów danych.
+Dostarcza wysoką dostępność bez ryzyka, że pojedyncza awaria uszkodzi system.
+Oferuje wiele strategii replikacji, skalowalność i konfigurację poziomu spójności.
+
+Cassandra została wykorzystana w projekcie m.in. do przechowywania eksplorowanych stanów, tranzycji, czy automatów Büchiego.
+
+\noindent
+Eksplorowane stany zapisywane są w tabeli o prostej strukturze.
+Poza samą wartością znajduje się tutaj tylko identyfikator oraz wyliczony hasz, który służy do wyszukiwania:
+\begin{itemize}
+    \setlength\itemsep{-0.1cm}
+    \item $ id: uuid $
+    \item $ hash: text $
+    \item $ systemstate: system\_state $
+\end{itemize}
+Tranzycje podobnie jak odwiedzane stany wykorzystywane są zarówno przez GB, jak i LV.
+Każda z nich ma swą wartość oraz identyfikatory stanów, które łączy:
+\begin{itemize}
+    \setlength\itemsep{-0.1cm}
+    \item $ id: uuid $
+    \item $ fromsystemstateid: uuid $
+    \item $ tosystemstateid: uuid $
+    \item $ transition: transition $
+\end{itemize}
+
+Pozostałe tabele służą tylko i wyłącznie LV.
+Przechowują dane, które muszą zostać zachowane pomiędzy kolejnymi zapytaniami klienta.
+Najważniejsza z nich to przechowująca automaty Büchiego.
+Serializowanie samego tego obiektu okazało się nietrywialne ze względu na skomplikowaną i cykliczną strukturę w \textit{ltl2buchi}.
+Drugim problemem były obiekty porównujące z biblioteki \textit{Hamcrest}.
+W związku z tym zapisywana w bazie jest formuła, z której można utworzyć automat oraz identyfikator aktualnego węzła, aby go ustawić.
+Kolejna kolumna to \textit{verificationidwithstatehash}.
+Będzie ona się powtarzać także w innych tabelach.
+Pozwala powiązać rekord z konkretną weryfikacją oraz samym haszem stanu systemu, którego to dotyczy.
+Wartość \textit{previousautomatonstateid} przechowuje identyfikator poprzedniego automatu, dzięki któremu można zawsze odnaleźć ścieżkę aż do korzenia (po znalezieniu akceptującego cyklu).
+Całość tabeli prezentuje się następująco:
+\begin{itemize}
+    \setlength\itemsep{-0.1cm}
+    \item $ id: uuid $
+    \item $ previousautomatonstateid: uuid $
+    \item $ currentnodeid: int $
+    \item $ stringformula: text $
+    \item $ verificationidwithstatehash: text $
+\end{itemize}
+
+W projekcie wykorzystane zostały jeszcze 3 tabele.
+Potrzebne są, aby przechowywać dane, jakie do tej pory uzyskano przez algorytm.
+Każda z nich składa się z identyfikatora, \textit{verificationidwithstatehash} (opisane powyżej) oraz dodatkowej kolumny specyficznej dla siebie.
+Dla tabeli zawierającej zbiór stanów poprzedzających cykl akceptujący to hasz stanu systemu.
+Kolejna zajmuje się ilością poprzedników dla każdego stanu, więc w jej skład wchodzi licznik.
+Ostatnia obsługuje algorytm MAP, dlatego ją cechuje wartość MAP dla stanu.
