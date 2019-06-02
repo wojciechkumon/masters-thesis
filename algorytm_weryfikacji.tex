@@ -28,7 +28,7 @@ Obliczany jest zbiór stanów poprzedzanych przez cykl akceptujący (\textit{app
 Jeśli po zakończeniu algorytmu zbiór ten jest pusty, nie ma cyklu akceptującego.
 Sam zbiór wylicza się w kilku fazach.
 Pierwsza z nich, czyli \textit{initialise()} (algorytm \ref{alg:initialise}) eksploruje pełną przestrzeń stanów systemu oraz przygotowuje niezbędne dane dla kolejnych faz.
-Kolejne dwie usuwają ze zbioru stany, które nie mogą być częścia cyklu akceptującego.
+Kolejne dwie usuwają ze zbioru stany, które nie mogą być częścią cyklu akceptującego.
 
 Jedna z nich to \textit{eliminateNoAccepting()} (algorytm \ref{alg:eliminateNoAccepting}).
 Zaczyna się od pozostawienia w zbiorze jedynie stanów akceptujących (linie 3-10).

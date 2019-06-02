@@ -1,13 +1,48 @@
 \chapter{Podsumowanie}
 
-Todo
+Celem pracy było stworzenie rozproszonego algorytmu weryfikacji modelowej na podstawie własności logicznych czasu liniowego LTL dla języka Alvis z wykorzystaniem frameworka Spring.
+Wykonany został system, na który składa się kilka aplikacji komunikujących się za pomocą sieci.
+
+Rozwiązanie to pozwala na weryfikację modelową w skalowalny sposób.
+Wszystko dzięki bezstanowym serwisom oraz bazie NoSQL.
+Wdrożenie na platformie chmurowej umożliwiłoby sprawdzanie wielu formuł LTL jednocześnie.
+Wydajność byłaby proporcjonalna do liczby uruchomionych instancji.
+Ponadto algorytm działa równolegle dla grup stanów wychodzących z jednego węzła, aby wykorzystać potencjał wielu rdzeni procesora i przyspieszyć długość weryfikacji pojedynczej formuły.
+
+Sposób implementacji pozwala też na krokowe weryfikowanie.
+To aplikacja eksplorująca stany nadaje tempo i kontroluje całość.
+Umożliwia to nawet pauzowanie procesu, a dzięki trwałemu zapisowi w bazie danych - kontynuację w dowolnym momencie.
+
+Kolejną cechą jest działanie w locie.
+Pozwala na wczesne zakończenie algorytmu, czyli zanim zeksplorowana zostanie cała przestrzeń stanów.
+Istnieją pewne warunku, które należy spełnić, aby do tego doszło.
+Jednak sam ten fakt daje możliwość szybkiej kontroli zmian w modelu z dużym prawdopodobieństwem.
+Równoległe uruchomienie wielu formuł pozwoli wykryć w locie znaczną część nowych błędów.
+
+Aby mieć pewność, że system spełnia wszystkie założenia, trzeba oczywiście dokonać sprawdzenia wszystkich jego stanów.
+Nie można orzec spełnienia formuły, jeśli proces zakończy się wcześniej.
+Zwykle wymaga to długotrwałych obliczeń, ale dzięki implementacji, która umożliwia wdrożenie w środowisku chmurowym (z cechami opisanymi powyżej), czas ten ulega skróceniu.
 
 
 \section{Propozycje rozwoju}
 
-Todo
+Podobnie jak w większości systemów tutaj także jest miejsce na usprawnienia.
+Odnaleźć można kilka obszarów, które można rozwinąć.
+
+Jeden z nich to sposób komunikacji pomiędzy aplikacjami GB i LV.
+Interfejs aplikacji weryfikującej opiera się na protokole HTTP z wykorzystaniem formatu JSON.
+Do wydajniejszego zakodowania danych użyć można np. Protocol Buffers, FlatBuffers, czy Apache Thrift.
+Co więcej - zmiana modelu integracji na przesyłanie komunikatów pozwoliłaby na więcej równoległej pracy klienta i serwera.
+
+Kolejny punkt na usprawnienie to baza danych.
+Obecnie dwie tabele (przechowujące stany i tranzycje) używane są przez dwie aplikacje.
+Jedynie GB dokonuje w nich modyfikacji, jednak potrzebne dane mogłyby być transportowane razem z komunikatem.
+Pozbycie się integracji przez bazę danych zmniejszyłoby wzajemne zależności w systemie.
+
+Ostatnim dostrzeżonym miejscem do ewentualnych zmian jest tekstowa reprezentacja formuły.
+Wykorzystany język Kotlin świetnie sobie radzi z tym zadaniem, zapewnia pełną elastyczność, ale pozwala też na zbyt wiele.
+Można za jego pomocą wykonać kod na serwerze LV, więc zastosowanie własnego języka opisu wraz z parserem byłoby bezpieczniejsze (lecz zapewne bardziej ograniczające).
 
 
 % TODO
 % opis weryfikowanego systemu, modelu, jakies LTLe przykladowe
-% usprawnienia do zrobienia w przyszlosci (po podsumowaniu) - komunikacja przez komunikaty, brak integracji przez baze

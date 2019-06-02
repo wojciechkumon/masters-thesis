@@ -71,11 +71,9 @@ Interfejs implementowany przez LV opisuje listing \ref{lst:ltl_verifier_interfac
   }
 \end{lstlisting}
 
-\textit{Graph Builder} (\textbf{GB}) spełnia rolę serca systemu.
+\textit{Graph Builder} (\textbf{GB}) odgrywa rolę serca systemu.
 To centrum sterowania, które inicjuje zapytania do pozostałych aplikacji.
 Zarządza eksploracją kolejnych stanów, a także wysyła je do weryfikacji.
-Zarówno GB jak i LV komunikują się z bazą danych (Cassandra), aby czytać i zapisywać stany czy tranzycje.
-Komunikacja między GB a GP zachodzi za pomocą Apache Thrift, wykorzystując binarny protokół przesyłając dane siecią.
+Zarówno GB, jak i LV komunikują się z bazą danych (Cassandra), aby czytać i zapisywać stany czy tranzycje.
+Komunikacja między GB a GP zachodzi za pomocą Apache Thrift, wykorzystując binarny protokół do  przesyłania danych siecią.
 Zapytania GB do LV realizowane są poprzez protokół HTTP w formacie JSON.
-
-% TODO dopisać o celach i możliwościach architektury, może diagram z wyszczególnionymi protokołami komunikacji
