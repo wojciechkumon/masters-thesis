@@ -7,7 +7,7 @@ Uruchomione zostaje wiele instancji tego samego serwisu.
 
 Dzięki jego bezstanowości (żadnych danych sesyjnych, które przechowywane są w pamięci pomiędzy zapytaniami do serwera) nie ma znaczenia, która replika obsłuży żądanie.
 Każda wykona je identycznie, a cały stan odczytywany i umieszczany jest z wykorzystaniem bazy danych.
-W środowisku chmurowym cały system może być dynamicznie dostosowywane do aktualnych potrzeb, aby zapewnić szybkość, ale także nie marnować zasobów.
+W środowisku chmurowym system może być dynamicznie dostosowywane do aktualnych potrzeb, aby zapewnić szybkość, ale także nie marnować zasobów.
 
 Poniżej przedstawiony zostanie opis zrealizowanego systemu.
 
@@ -89,11 +89,11 @@ public VerificationState checkModel() {
 Obiektowa reprezentacja formuły LTL nie wystarcza, aby móc je tworzyć.
 Potrzebny jest sposób umożliwiający zapis tekstem.
 Dzięki temu można przygotowywać zestawy formuł, jakie powinien spełniać system, po czym wykorzystać je jako parametr dla weryfikatora.
-Koniecznością więc było ich parsowanie.
+Konieczne było więc ich parsowanie.
 
 Spełnić należało dwa wymagania.
 Pierwszym była obsługa spójników zdaniowych i operatorów temporalnych, jakie oferuje LTL.
-Drugie pozostawienie elastyczności, co do samych warunków, tak aby móc je dowolnie komponować i łączyć.
+Drugie to pozostawienie elastyczności, co do samych warunków, tak aby móc je dowolnie komponować i łączyć.
 Wspierać należało porównywanie dowolnych wartości modelu na różne sposoby, np. przez tę samą wartość, wyrażenia regularne, czy relację porządku.
 
 Zamiast tworzenia własnego języka, wykorzystany został Kotlin poprzez jego silnik skryptowy.
@@ -108,7 +108,7 @@ Oferuje ona bogaty zestaw komparatorów, możliwość ich łączenia i testowani
 Przykładową formułę prezentuje listing \ref{lst:kotlin_formulas}.
 
 \begin{minipage}{\linewidth}
-\begin{lstlisting}[caption={Przykładowa formuły LTL w języku Kotlin.},captionpos=b,label={lst:kotlin_formulas}]
+\begin{lstlisting}[caption={Przykładowa formuła LTL w języku Kotlin.},captionpos=b,label={lst:kotlin_formulas}]
 
 val bfsPcEq1 = proposition(hasProperty<SystemState>("bfsHeuristicState", 
         hasProperty<Int>("pc", equalTo(1))))
@@ -123,7 +123,7 @@ val formula = globally(bfsPcEq1 implies finally(bfsPcGt1))
 \section{LTL to Büchi} \label{sec:ltl2buchi}
 
 Do obiektowej reprezentacji formuły wykorzystana została biblioteka \textit{ltl2buchi} \\(\url{https://github.com/fraimondi/ltl2buchi}).
-Pozwala ona na tworzenie formuł z dowolnymi twierdzeniami (używa klas generycznych).
+Pozwala ona na ich tworzenie z dowolnymi twierdzeniami (używa klas generycznych).
 
 Jej główną funkcjonalnością jest ich konwersja do grafów reprezentujących uogólnione automaty Büchiego.
 Te są redukowane, degeneralizowane i znów redukowane.
@@ -181,18 +181,18 @@ W tym celu eksploruje się wewnętrzną strukturę grafu, sprawdza listę wyraż
 Następnie zwrócony zostaje nowy automat, którego aktualny węzeł, to ten znaleziony.
 
 Klasa pozwala także na sprawdzenie, czy aktualnie znajduje się w stanie akceptującym.
-Znajduje się tutaj również funkcja, która przyjmuje formułę, neguje ją oraz buduje automat Büchiego (zgodnie z listingiem \ref{lst:formula_to_graph}).
+Mieści się tutaj również funkcja, która przyjmuje formułę, neguje ją oraz buduje automat Büchiego (zgodnie z listingiem \ref{lst:formula_to_graph}).
 Kod prezentujący powyższą funkcjonalność znajduje się w listingu \ref{lst:ltl_automaton}.
 
 \begin{minipage}{\linewidth}
 \begin{lstlisting}[caption={Implementacja automatu Büchiego.},captionpos=b,label={lst:ltl_automaton}]
-public class LtlAutomaton<T> {
+public class BuchiAutomaton<T> {
   private final Graph<Matcher<T>> buchiAutomaton;
   private final Node<Matcher<T>> currentNode;
 
   /* [...] */
 
-  public LtlAutomaton<T> nextState(T targetSystemState) {
+  public BuchiAutomaton<T> nextState(T targetSystemState) {
     val outgoingEdges = this.currentNode.getOutgoingEdges();
     if (outgoingEdges.isEmpty()) {
       throw new IllegalStateException("No more edges to follow");
@@ -205,7 +205,7 @@ public class LtlAutomaton<T> {
         .map(Edge::getNext)
         .orElse(this.currentNode);
 
-    return new LtlAutomaton<>(this.buchiAutomaton, nextNode);
+    return new BuchiAutomaton<>(this.buchiAutomaton, nextNode);
   }
 
   private boolean allGuardsMatch(Object system, Edge<Matcher<T>> edge) {
@@ -219,10 +219,10 @@ public class LtlAutomaton<T> {
     return this.currentNode.getAttributes().getString(ACCEPTING_KEY) != null;
   }
 
-  public static <T> LtlAutomaton<T> prepareAutomaton(
+  public static <T> BuchiAutomaton<T> prepareAutomaton(
           Formula<Matcher<T>> formulaToCheck) {
     val negatedFormula = formulaToCheck.negate();
-    return newLtlAutomaton(negatedFormula);
+    return newBuchiAutomaton(negatedFormula);
   }
 }
 
@@ -257,18 +257,18 @@ W listingu \ref{lst:initializeModelChecking} znajduje się kod implementujący t
 \begin{minipage}{\linewidth}
 \begin{lstlisting}[caption={Kod obsługujący inicjację weryfikacji modelowej.},captionpos=b,label={lst:initializeModelChecking}]
 
-public VerificationId initializeModelChecking(LtlAutomaton<SystemState> automaton,
+public VerificationId initializeModelChecking(BuchiAutomaton<SystemState> automaton,
                                               List<String> initialStateHashes) {
   val verificationId = new VerificationId();
   initialStateHashes.stream()
       .map(systemStatesService::findStateByHash)
       .map(targetState -> {
         val nextState = automaton.nextState(targetState.getSystemState());
-        return new StoredLtlAutomaton(verificationId, nextState,
+        return new StoredBuchiAutomaton(verificationId, nextState,
             targetState.getHash());
       })
       .peek(this::addToApproxSet)
-      .forEach(ltlAutomatonRepository::save);
+      .forEach(buchiAutomatonRepository::save);
   return verificationId;
 }
 
@@ -282,7 +282,7 @@ Wielokrotnie wykonywanym zapytaniem jest to, które weryfikuje nowe stany system
 Pozwala zakończyć sprawdzanie formuły LTL, jeśli znajdzie się akceptujący cykl dla jej zaprzeczenia.
 
 Parametry wejściowe to lista nowych stanów, stan źródłowy, z którego one wychodzą oraz identyfikator weryfikacji.
-Działanie zaczyna się od pobrania z bazy danych automatu Büchiego, który odpowiada źródle.
+Działanie zaczyna się od pobrania z bazy danych automatu Büchiego, który odpowiada źródłu.
 Następnie przetwarzana jest cała lista nowych stanów w sposób równoległy, co pozwoli przyspieszyć wykonanie algorytmu.
 Można było zastosować to podejście, ponieważ nie ma tu żadnej operacji, która modyfikuje wspólny zasób.
 Wszystkie działania są rozłączne.
@@ -291,27 +291,27 @@ Wszystkie działania są rozłączne.
 \begin{lstlisting}[caption={Implementacja heurystyki pozwalającej na weryfikację modelową w locie.},captionpos=b,label={lst:checkNewStates}]
 public boolean checkNewStates(NewStates newStates, VerificationId verificationId) {
   String sourceStateHash = newStates.getSourceStateHash();
-  StoredLtlAutomaton storedLtlAutomaton = findSavedLtlAutomaton(verificationId,
-                                                                sourceStateHash);
+  val storedBuchiAutomaton = findSavedBuchiAutomaton(verificationId,
+                                                     sourceStateHash);
   return newStates.getReachableStatesHashes().stream().parallel()
       .map(systemStatesService::findStateByHash)
-      .map(targetState -> toNextStateAutomaton(verificationId, storedLtlAutomaton,
+      .map(targetState -> toNextStateAutomaton(verificationId, storedBuchiAutomaton,
                                                targetState))
       .peek(this::addToApproxSet)
-      .map(ltlAutomatonRepository::save)
-      .anyMatch(ltlAutomaton -> runMapAlgorithm(sourceStateHash, ltlAutomaton));
+      .map(buchiAutomatonRepository::save)
+      .anyMatch(buchiAutomaton -> runMapAlgorithm(sourceStateHash, buchiAutomaton));
 }
 
 private boolean runMapAlgorithm(String sourceStateHash,
-                                StoredLtlAutomaton ltlAutomaton) {
-  String targetStateHash = ltlAutomaton.getMatchingStateHash();
-  VerificationId verificationId = ltlAutomaton.getVerificationId();
+                                StoredBuchiAutomaton buchiAutomaton) {
+  String targetStateHash = buchiAutomaton.getMatchingStateHash();
+  VerificationId verificationId = buchiAutomaton.getVerificationId();
   String sourceStateMap =
       mapAlgorithmService.getMap(verificationId, sourceStateHash);
-  if (ltlAutomaton.getLtlAutomaton().isAccepting()) {
+  if (buchiAutomaton.getBuchiAutomaton().isAccepting()) {
     if (targetStateHash.equals(sourceStateHash) ||
             targetStateHash.equals(sourceStateMap)) {
-        log.info(buildAcceptingPath(ltlAutomaton));
+        log.info(buildAcceptingPath(buchiAutomaton));
         return true;
     }
     mapAlgorithmService.setMap(verificationId, targetStateHash,
@@ -326,7 +326,7 @@ private boolean runMapAlgorithm(String sourceStateHash,
 \end{minipage}
 
 Dla każdego stanu uzyskuje się odpowiadający mu automat Büchiego (aplikując stan systemu do automatu źródłowego).
-Kolejnym krok to dodanie do zbioru stanów poprzedzających cykl, po czym następuje kluczowy moment, czyli heurystyka oparta na algorytmie MAP.
+Kolejny krok to dodanie do zbioru stanów poprzedzających cykl, po czym następuje kluczowy moment, czyli heurystyka oparta na algorytmie MAP.
 W przypadku wierzchołka akceptującego sprawdza się, czy nie został zamknięty cykl akceptujący.
 Gdy do tego dojdzie, następuje zakończenie algorytmu, poinformowanie o tym klienta oraz wypisanie całej ścieżki od liścia do korzenia, która spowodowała niespełnienie zadanej formuły LTL. Całość działa to zgodnie z opisem w sekcji \ref{heuristic}.
 
@@ -347,7 +347,7 @@ Ze zbioru najpierw usuwane są stany nieakceptujące, po czym dodaje się do nie
 Druga wykorzystywana funkcja to \textit{eliminateNoPredecessors} - jej implementacja znajduje się w listing \ref{lst:eliminateNoPredecessorsStates}.
 Jej zadanie polega na usunięciu ze zbioru wszystkich stanów, które nie mają poprzedników.
 Co więcej, dla następników takich stanów, zmniejszana jest ich liczba poprzedników.
-Jeśli spadnie ona do zera, całość powtarza się rekurencyjnie dla takich stanów.
+Jeśli spadnie ona do zera, całość powtarza się rekurencyjnie.
 
 \begin{minipage}{\linewidth}
 \begin{lstlisting}[caption={Kod obsługujący algorytm w przypadku, gdy nie zakończy się wcześniej.},captionpos=b,label={lst:finishAlgorithm}]
@@ -448,8 +448,8 @@ Każda z nich ma swą wartość oraz identyfikatory stanów, które łączy:
 \end{itemize}
 
 Pozostałe tabele służą tylko i wyłącznie LV.
-Przechowują dane, które muszą zostać zachowane pomiędzy kolejnymi zapytaniami klienta.
-Najważniejsza z nich to przechowująca automaty Büchiego.
+Przechowują dane, które muszą zostać zapamiętane pomiędzy kolejnymi zapytaniami klienta.
+Najważniejsza z nich to zawierająca automaty Büchiego.
 Serializowanie samego tego obiektu okazało się nietrywialne ze względu na skomplikowaną i cykliczną strukturę w \textit{ltl2buchi}.
 Drugim problemem były obiekty porównujące z biblioteki \textit{Hamcrest}.
 W związku z tym zapisywana w bazie jest formuła, z której można utworzyć automat oraz identyfikator aktualnego węzła, aby go ustawić.

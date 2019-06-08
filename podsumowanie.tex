@@ -6,7 +6,7 @@ Wykonany został system, na który składa się kilka aplikacji komunikujących 
 Rozwiązanie to pozwala na weryfikację modelową w skalowalny sposób.
 Wszystko dzięki bezstanowym serwisom oraz bazie NoSQL.
 Wdrożenie na platformie chmurowej umożliwiłoby sprawdzanie wielu formuł LTL jednocześnie.
-Wydajność byłaby proporcjonalna do liczby uruchomionych instancji.
+Wydajność byłaby zależna do liczby uruchomionych instancji.
 Ponadto algorytm działa równolegle dla grup stanów wychodzących z jednego węzła, aby wykorzystać potencjał wielu rdzeni procesora i przyspieszyć długość weryfikacji pojedynczej formuły.
 
 Sposób implementacji pozwala też na krokowe weryfikowanie.
@@ -14,10 +14,10 @@ To aplikacja eksplorująca stany nadaje tempo i kontroluje całość.
 Umożliwia to nawet pauzowanie procesu, a dzięki trwałemu zapisowi w bazie danych - kontynuację w dowolnym momencie.
 
 Kolejną cechą jest działanie w locie.
-Pozwala na wczesne zakończenie algorytmu, czyli zanim zeksplorowana zostanie cała przestrzeń stanów.
-Istnieją pewne warunku, które należy spełnić, aby do tego doszło.
-Jednak sam ten fakt daje możliwość szybkiej kontroli zmian w modelu z dużym prawdopodobieństwem.
-Równoległe uruchomienie wielu formuł pozwoli wykryć w locie znaczną część nowych błędów.
+Pozwala na wczesne zakończenie algorytmu, czyli zanim przeszukana zostanie cała przestrzeń stanów.
+Istnieją pewne warunki, które należy spełnić, aby do tego doszło.
+Jednak sam ten fakt daje możliwość kontroli zmian w modelu z dużym prawdopodobieństwem szybkiego wykrycia problemów.
+Równoległe uruchomienie wielu formuł pozwoli odnaleźć w locie znaczną część nowych błędów.
 
 Aby mieć pewność, że system spełnia wszystkie założenia, trzeba oczywiście dokonać sprawdzenia wszystkich jego stanów.
 Nie można orzec spełnienia formuły, jeśli proces zakończy się wcześniej.

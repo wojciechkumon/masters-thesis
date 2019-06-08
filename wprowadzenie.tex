@@ -47,16 +47,16 @@ Podejście to świetnie sprawdza się w wykrywaniu (częstych) błędów związa
 
 \vspace{0.5cm}
 Model systemu zazwyczaj generuje się automatycznie z opisu w odpowiednim języku lub dialekcie wspieranym przez narzędzie. 
-Weryfikator modelowy przeszukuje kolejne stany. Następnie sprawdzane są pod kątem właściwości. Po znalezieniu naruszenia, prezentowany zostaje kontrprzykład wraz z całą ścieżką wykonania, która do niego prowadzi. Pozwala to łatwo odtworzyć całą ścieżkę, a także znaleźć niespójność, która wymaga zmiany modelu (lub właściwości) - schemat na rys. \ref{fig:model_checking_scheme}.
+Weryfikator modelowy przeszukuje kolejne stany. Następnie sprawdzane są pod kątem właściwości. Po znalezieniu naruszenia, prezentowany zostaje kontrprzykład wraz z całą ścieżką wykonania, która do niego prowadzi. Pozwala to łatwo znaleźć niespójność, która wymaga zmiany modelu (lub właściwości) - schemat na rys. \ref{fig:model_checking_scheme}.
 
 \vspace{0.5cm}
 \noindent
-To nie jedyne zalety, kolejnymi mocnymi stronami weryfikacji modelowej są:
+To nie jedyne zalety. Kolejnymi mocnymi stronami weryfikacji modelowej są:
 \begin{itemize}
+\item Wsparcie częściowej weryfikacji - możemy sprawdzać poszczególne właściwości niezależnie, nawet gdy pełna specyfikacja nie jest gotowa.
 \item To ogólna metoda weryfikacji, która sprawdza się zarówno przy tworzeniu oprogramowania, jak i projektowaniu sprzętu (np. procesorów).
-\item Wspiera częściową weryfikację - możemy sprawdzać poszczególne właściwości niezależnie, nawet gdy pełna specyfikacja nie jest gotowa.
-\item Wszystkie możliwości zostają sprawdzone.
 \item Dostarcza informacji diagnostycznych po wykryciu niespełnionej właściwości.
+\item Wszystkie możliwości zostają sprawdzone.
 \item Uruchomienie weryfikatora nie wymaga ekspertyzy na tym polu.
 \item Łatwo zintegrować to rozwiązanie z cyklem wytwarzania oprogramowania.
 \item Obecnie wzrasta zainteresowania tym podejściem.
@@ -76,7 +76,7 @@ Oczywiście nie brak także wad:
 \section{Logika LTL}
 
 Logika LTL to jednak z logik temporalnych. Opiera się na liniowej strukturze czasu.
-Jej składnia i semantyka pozwala precyzyjnie opisywać bogate spektrum właściwości systemu, włączając w to m.in bezpieczeństwo czy żywotność \cite{Bel17}.
+Jej składnia i semantyka pozwala precyzyjnie opisywać bogate spektrum właściwości systemu, włączając w to m.in. bezpieczeństwo czy żywotność \cite{Bel17}.
 ``Temporalna`` oznacza umiejscawianie zdarzeń relatywnie względem innych, to pewna abstrakcja ponad czasem.  Z tego powodu niewykonalne jest sprawdzenie, czy maksymalne opóźnienie między zdarzeniami wynosi $500ms$.
 
 Formuły LTL ponad zbiorem $AP$ wyrażeń atomowych przedstawia poniższa gramatyka:
@@ -184,9 +184,9 @@ Sam schemat przedstawiający jak działa weryfikacja modelowa, kiedy wykorzystuj
 \section{Eksploracja stanów systemu}
 
 Posiadanie modelu systemu nie oznacza dostępności pełnego grafu stanów.
-Może to być niepraktyczne lub nawet niemożliwe ze względu na liczbę stanów.
-Preferowanym podejście to generowanie kolejnych stanów i ich weryfikacja ich w locie.
-Takie rozwiązanie pozwala na wykrycie niespójności we wczesnym etapie, unikając generacji całej przestrzeni stanów.
+Może to być niepraktyczne lub nawet niemożliwe ze względu na ich liczbę.
+Preferowane podejście to generowanie kolejnych stanów i ich weryfikacja ich w locie.
+Takie rozwiązanie pozwala na wykrycie niespójności we wczesnym etapie, unikając przygotowywania całej przestrzeni stanów.
 
 Kolejnym czynnikiem wpływającym na wydajność jest sam algorytm budujący graf stanów.
 W przypadku skomplikowanych systemów spodziewać się można olbrzymiego grafu, więc również czas jego tworzenia będzie odzwierciedlał rozmiar.
@@ -198,7 +198,7 @@ Z czasem powstała też nowa grupa algorytmów.
 Opiera się na podziale grafu na silnie spójne składowe, wywodzi się ona z algorytmu Tarjana \cite{Jac05}.
 Złożoność obliczeniowa tych algorytmów jest liniowa $O(m + n)$, gdzie $m$ to liczba krawędzi, a $n$ oznacza ilość stanów.
 Wszystkie korzystają z tej samej zasady eksploracji - przeszukiwania wstecznego (ang. \textit{post-order}).
-Faktem jest, że problem takiego przeszukiwania jest P-zupełny, więc skalowany, równoległy algorytm tego typu najprawdopodobniej nie istnieje \cite{Reif85}.
+Faktem jest, że problem takiego przeszukiwania jest P-zupełny, więc skalowany, równoległy algorytm tego typu prawdopodobnie nie istnieje \cite{Reif85}.
 
 Algorytmem wartym uwagi jest \textit{on-the-fly OWCTY} \cite{Bar12}.
 Opiera on się na algorytmie OWCTY (ang. \textit{One Way Catch Them Young}) \cite{Cer03} oraz MAP (ang. \textit{Maximal Accepting Predecessor}) \cite{Bri04}.
@@ -206,7 +206,7 @@ Co więcej, pozwala na zrównoleglenie obliczeń.
 
 OWCTY nie polega na przeszukiwaniu wstecznym DFS, dzięki czemu wykonalne jest jego równoległe wykonanie.
 Niestety procedura sortowania topologicznego nie wykrywa cykli akceptujących wprost.
-Algorytm skupia się na eliminowaniu cykli nieakceptujących. 
+Algorytm skupia się na eliminowaniu tych nieakceptujących. 
 Wyliczany i przechowywany jest zbiór stanów poprzedzających akceptujący cykl.
 Jeśli po zakończeniu algorytmu zbiór ten okaże się pusty, oznacza to, że nie ma cyklu akceptującego.
 Całość składa się z dwóch faz, które wykonywane są w pętli, dopóki nie osiągnie się stałego punktu (kolejne wykonanie faz nic nie zmienia).
