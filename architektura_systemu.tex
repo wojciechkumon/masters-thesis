@@ -3,24 +3,6 @@
 Założeniem projektu było stworzenie algorytmu weryfikacji modelowej w oparciu o własności LTL dla języka Alvis w środowisku rozproszonym.
 
 
-\section{Alvis}
-
-Alvis to język formalny, którego celem jest dostarczenie elastyczności w modelowaniu systemów współbieżnych i czasu rzeczywistego wraz z możliwością weryfikacji opartej o metody formalne.
-Jego nazwa pochodzi od połączenia słów \textbf{al}gebra i \textbf{vis}ual.
-To łatwy w użyciu dla inżynierów formalny język modelowania.
-Oferuje także język wizualny do projektowania struktur.
-Za pomocą Alvisa modelować można systemy współbieżne, czasu rzeczywistego, wbudowane oraz rozproszone.
-
-Model Alvisa to system agentów, które zazwyczaj działają współbieżnie, komunikują się między sobą, konkurują o współdzielone zasoby itp.
-Agenty dzielą się na aktywne i pasywne.
-Zachowanie każdego z nich definiuje się w warstwie kodu, którego konstrukcje przypominają języki wysokiego poziomu.
-
-% TODO kilka zdan o modelu, dla ktorego jest weryfikacja
-% model systemu to zbior agentow, ktore odpowiadaja dzialaniu aplikacji buildera
-% w ich sklad wchodzi m.in. stan heurystyki przeszukiowania BFS, cassandry, czy opisu grafu
-% Dla tego modelu tworzone będą formuły LTL, które powinien spełnić.
-
-
 \section{System rozproszony}
 
 Architektura systemu została zaplanowana tak, aby wydzielić funkcjonalności do odseparowanych aplikacji.
@@ -77,3 +59,22 @@ Zarządza eksploracją kolejnych stanów, a także wysyła je do weryfikacji.
 Zarówno GB, jak i LV komunikują się z bazą danych (Cassandra), aby czytać i zapisywać stany czy tranzycje.
 Komunikacja między GB a GP zachodzi za pomocą Apache Thrift, wykorzystując binarny protokół do  przesyłania danych siecią.
 Zapytania GB do LV realizowane są poprzez protokół HTTP w formacie JSON.
+
+
+\section{Alvis}
+
+Alvis to język formalny, którego celem jest dostarczenie elastyczności w modelowaniu systemów współbieżnych i czasu rzeczywistego wraz z możliwością weryfikacji opartej o metody formalne.
+Jego nazwa pochodzi od połączenia słów \textbf{al}gebra i \textbf{vis}ual.
+To łatwy w użyciu dla inżynierów formalny język modelowania.
+Oferuje także język wizualny do projektowania struktur.
+Za pomocą Alvisa modelować można systemy współbieżne, czasu rzeczywistego, wbudowane oraz rozproszone.
+
+Model Alvisa to system agentów, które zazwyczaj działają współbieżnie, komunikują się między sobą, konkurują o współdzielone zasoby itp.
+Agenty dzielą się na aktywne i pasywne.
+Zachowanie każdego z nich definiuje się w warstwie kodu, którego konstrukcje przypominają języki wysokiego poziomu.
+
+W tworzonym rozwiązaniu potrzebny był model systemu, dla którego przeprowadzona zostanie weryfikacja.
+Wykorzystany został taki, który modeluje algorytm eksploracji stanów dla języka Alvis (czyli aplikacje GB, GP oraz bazę danych).
+To konstrukcja, która pozwala sprawdzić samą siebie, a więc czy algorytm budujący pełny graf stanów nie zawiera błędów.
+W jej skład wchodzi wiele elementów, np. stan heurystyki przeszukiwania BFS, bazy danych, wątku budującego graf, czy repozytoriów na dane.
+To one będą weryfikowane pod kątem spełnienia formuł LTL.
