@@ -6,7 +6,7 @@ Błędy w oprogramowaniu skutkują stratami finansowymi, wizerunkowymi, opóźni
 
 \section{Weryfikacja systemu}
 
-Weryfikacja systemu ma na celu ustalenie, czy projekt zawiera oczekiwane właściwości. Mogą one być dość podstawowe (np. nigdy nie dojdzie do zakleszczenia) lub związane z domeną (np. nie można wypłacić więcej pieniędzy, niż jest na koncie). Specyfikacja dostarcza informacji, jak system może oraz jak nie może się zachowywać. Oprogramowanie uważa się za poprawne, jeśli spełnia wszystkie właściwości. Schemat weryfikacji został przedstawiony na rys. \ref{fig:system_verification_scheme}.
+Weryfikacja systemu ma na celu ustalenie, czy projekt zawiera oczekiwane właściwości. Mogą one być podstawowe i niezależne od implementowanej dziedziny (np. nigdy nie dojdzie do zakleszczenia) lub z nią związane (np. nie można wypłacić więcej pieniędzy, niż jest na koncie). Specyfikacja dostarcza informacji, jak system może oraz jak nie może się zachowywać. Oprogramowanie uważa się za poprawne, jeśli spełnia wszystkie właściwości. Schemat weryfikacji został przedstawiony na rys. \ref{fig:system_verification_scheme}.
 
 \begin{figure}[h]
     \centering
@@ -15,18 +15,31 @@ Weryfikacja systemu ma na celu ustalenie, czy projekt zawiera oczekiwane właśc
     \label{fig:system_verification_scheme}
 \end{figure}
 
-Podstawową formą radzenia sobie z tym problemem jest testowanie oprogramowania (testy jednostkowe, integracyjne, systemowe itp.). Polega ono na uruchamianiu kodu dla różnych ścieżek wykonania, po czym porównuje się ich wyjścia z oczekiwanymi. Niestety, przetestowanie wszystkiego okazuje się praktycznie niemożliwe, zwykle sprawdzane są jedynie warunki brzegowe (stanowi to mały podzbiór wszystkich kombinacji). 
+Podstawową formą radzenia sobie z błędami jest testowanie oprogramowania (testy jednostkowe, integracyjne, systemowe itp.).
+Proces testowania oprogramowania polega na uruchamianiu skompilowanej całej aplikacji lub jednie poszczególnych jej elementów wraz z wymuszeniem różnych przepływów sterowania, po czym porównuje się rezultaty rzeczywistego działania fragmentu kodu z oczekiwanymi wynikami.
+Niestety, przetestowanie wszystkich wariantów w sposób wyczerpujący okazuje się praktycznie niemożliwe, zwykle sprawdzane są jedynie warunki brzegowe, które stanowią mały podzbiór wszystkich potencjalnych kombinacji.
+
+Szczególnym wyzwaniem okazują się testy programów współbieżnych.
+Błędy zawarte w takich aplikacjach mogą ujawniać się w specyficznych warunkach.
+Zdarza się, że testy działają niedeterministycznie i trudno wyjaśnić czemu dochodzi do ich niepowodzenia co kilka tysięcy uruchomień.
+Wynika to zwykle z braku kontroli nad współdzielonym zasobem lub niesynchronizowania pracy wątków działających równolegle.
 
 
 \section{Weryfikacja modelowa}
 
-Podczas tworzenia skomplikowanych systemów, kładzie się coraz większy nacisk na testowanie poprawności oprogramowania. Metody formalne mają duży potencjał na tym polu. Ich wczesna integracja (podczas procesu projektowania) dostarcza efektywnych technik weryfikacji.
-Intuicyjnie, metody formalne można rozważać jako matematykę stosowaną dla modelowania i analizy systemów informatycznych. Zapewniają one poprawność z matematyczną dokładnością.
+Podczas tworzenia skomplikowanych systemów, kładzie się coraz większy nacisk na testowanie poprawności oprogramowania.
+Metody formalne mają duży potencjał na tym polu.
+Ich wczesna integracja z procesem wytwarzania oprogramowania dostarcza efektywnych technik weryfikacji zadanej specyfikacji.
+Intuicyjnie, metody formalne można rozważać jako matematykę stosowaną dla modelowania i analizy systemów informatycznych.
+Zapewniają one poprawność z matematyczną dokładnością.
 
-Techniki weryfikacji bazujące na modelu opisują zachowanie systemu deterministycznie i kompletnie. Samo tworzenie pełnego modelu może wykryć luki lub niespójności.
-Po jego stworzeniu, wraz z otaczającymi algorytmami, następuje eksploracja stanów systemu.
-Dzieje się to w podejściu ``brute-force`` - przejrzane zostają wszystkie możliwe scenariusze.
-W ten sposób udowadnia się spełnialność właściwości. Weryfikacji dotyczy również kolejność zdarzeń w czasie, np. czy system zawsze odpowie na żądania klienta w tym samym porządku, w jakim je otrzymał.
+Modelem nazywamy opis mechaniki systemu (zwykle uproszczony), który pozwala utworzyć graf reprezentujący wszystkie stany systemu.
+Techniki weryfikacji bazujące na modelu opisują zachowanie systemu deterministycznie i kompletnie.
+Samo tworzenie pełnego modelu może wykryć luki lub niespójności w projekcie.
+Kolejnym krokiem jest eksploracja stanów systemu.
+Dzieje się ona w podejściu ``brute-force`` - przejrzane zostają wszystkie możliwe scenariusze.
+W ten sposób udowadnia się spełnialność właściwości.
+Weryfikacji podlega również kolejność zdarzeń w czasie, np. czy system zawsze odpowie na żądania klienta w tym samym porządku, w jakim je otrzymał.
 
 \vspace{0.5cm}
 \begin{figure}[h]
@@ -36,7 +49,8 @@ W ten sposób udowadnia się spełnialność właściwości. Weryfikacji dotyczy
     \label{fig:model_checking_scheme}
 \end{figure}
 
-Podejście to świetnie sprawdza się w wykrywaniu (częstych) błędów związanych z wielowątkowością. Typowe oczekiwane właściwości:
+\noindent
+Kategorie właściwości współbieżnego systemu:
 \begin{itemize}
 \item osiągalność (niemożliwe jest zakleszczenie)
 \item bezpieczeństwo (coś niepożądanego nigdy nie wystąpi \cite{Alp87})
@@ -46,8 +60,11 @@ Podejście to świetnie sprawdza się w wykrywaniu (częstych) błędów związa
 \end{itemize}
 
 \vspace{0.5cm}
-Model systemu zazwyczaj generuje się automatycznie z opisu w odpowiednim języku lub dialekcie wspieranym przez narzędzie. 
-Weryfikator modelowy przeszukuje kolejne stany. Następnie sprawdzane są pod kątem właściwości. Po znalezieniu naruszenia, prezentowany zostaje kontrprzykład wraz z całą ścieżką wykonania, która do niego prowadzi. Pozwala to łatwo znaleźć niespójność, która wymaga zmiany modelu (lub właściwości) - schemat na rys. \ref{fig:model_checking_scheme}.
+Model systemu zazwyczaj jest generowany automatycznie na podstawie opisu w odpowiednim języku lub dialekcie wspieranym przez narzędzie. 
+Weryfikator modelowy przeszukuje kolejne stany.
+Następnie sprawdzane są one pod kątem właściwości.
+Po znalezieniu naruszenia specyfikacji prezentowany zostaje kontrprzykład, czyli cała ścieżka wykonania, która do niego prowadzi.
+Zaprezentowanie kontrprzykładu pozwala lepiej zrozumieć problem, namierzyć źródło niespójności w modelu - schemat na rys. \ref{fig:model_checking_scheme}.
 
 \vspace{0.5cm}
 \noindent
@@ -56,10 +73,10 @@ To nie jedyne zalety. Kolejnymi mocnymi stronami weryfikacji modelowej są:
 \item Wsparcie częściowej weryfikacji - możemy sprawdzać poszczególne właściwości niezależnie, nawet gdy pełna specyfikacja nie jest gotowa.
 \item To ogólna metoda weryfikacji, która sprawdza się zarówno przy tworzeniu oprogramowania, jak i projektowaniu sprzętu (np. procesorów).
 \item Dostarcza informacji diagnostycznych po wykryciu niespełnionej właściwości.
-\item Wszystkie możliwości zostają sprawdzone.
-\item Uruchomienie weryfikatora nie wymaga ekspertyzy na tym polu.
+\item Wszystkie możliwe ścieżki wykonania zostają sprawdzone.
+\item Uruchomienie weryfikatora nie wymaga ekspertyzy na tym polu, a przynajmniej nie jest znacząco trudniejsze od już szeroko stosowanych testów jednostkowych.
 \item Łatwo zintegrować to rozwiązanie z cyklem wytwarzania oprogramowania.
-\item Obecnie wzrasta zainteresowania tym podejściem.
+\item Obecnie wzrasta zainteresowanie tym podejściem.
 \end{itemize}
 
 \vspace{0.5cm}
@@ -67,19 +84,19 @@ To nie jedyne zalety. Kolejnymi mocnymi stronami weryfikacji modelowej są:
 Oczywiście nie brak także wad:
 \begin{itemize}
 \item Weryfikowany jest model systemu, a nie sam system. Brak tu gwarancji, że implementacja poprawnie go odtwarza.
-\item Sprawdzane są tylko wykorzystane wymagania. Nie można wnioskować o poprawności właściwości, które nie zostały sprawdzone (błąd niedokładnej specyfikacji \cite{Lam05}).
-\item Aplikacje oparte na dużej ilości danych mogą posiadać zbyt wiele stanów, aby je wszystkie wygenerować, a nawet ich liczba może być nieskończona.
+\item Sprawdzane są tylko wyspecyfikowane wymagania. Nie można wnioskować o poprawności właściwości, które nie ma (błąd niedokładnej specyfikacji \cite{Lam05}).
+\item Aplikacje oparte na dużej ilości danych mogą posiadać zbyt wiele stanów, aby weryfikator mógł je wszystkie wygenerować. W ekstremalnych przypadkach liczba stanów może być nieskończona.
 \item Podatność na problem eksplozji przestrzeni stanów \cite{Cla11}.
 \end{itemize}
 
 
 \section{Logika LTL}
 
-Logika LTL to jednak z logik temporalnych. Opiera się na liniowej strukturze czasu.
+Logika LTL to jedna z logik temporalnych. Opiera się na liniowej strukturze czasu.
 Jej składnia i semantyka pozwala precyzyjnie opisywać bogate spektrum właściwości systemu, włączając w to m.in. bezpieczeństwo czy żywotność \cite{Bel17}.
 ``Temporalna`` oznacza umiejscawianie zdarzeń relatywnie względem innych, to pewna abstrakcja ponad czasem.  Z tego powodu niewykonalne jest sprawdzenie, czy maksymalne opóźnienie między zdarzeniami wynosi $500ms$.
 
-Formuły LTL ponad zbiorem $AP$ wyrażeń atomowych przedstawia poniższa gramatyka:
+Formuły LTL ponad zbiorem $AP$ wyrażeń atomowych przedstawia poniższy opis:
 \begin{gather}
 \varphi::= true \,\, | \,\, false \,\, | \,\, a \,\, | \,\, \neg\varphi \,\, | \,\, \varphi \land \psi \,\, | \,\, \varphi \lor \psi \,\, | \,\, \varphi \Rightarrow \psi \,\, | \,\, \varphi \Leftrightarrow \psi \,\, | \nonumber\\
 \mathbf{X}\varphi \,\, | \,\, \mathbf{F}\varphi \,\, | \,\, \mathbf{G}\varphi \,\, | \,\, \varphi\mathbf{U}\psi \,\, | \,\, (\varphi)\nonumber
