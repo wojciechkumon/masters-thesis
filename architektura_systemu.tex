@@ -25,7 +25,7 @@ Jako jedyny dostarcza dane, dzięki którym da się zbudować przestrzeń stanó
 GP spełnia prosty interfejs przedstawiony w listingu \ref{lst:graph_provider_interface}.
 
 \begin{minipage}{\linewidth}
-\begin{lstlisting}[caption={Interfejs implementowany przez GP.},captionpos=b,label={lst:graph_provider_interface}]
+\begin{lstlisting}[caption={Interfejs implementowany przez GP.},captionpos=b,label={lst:graph_provider_interface},language=Java]
 
   public interface GraphProvider {
     Collection<Transition> allTransitionFromState(SystemState from);
@@ -41,7 +41,7 @@ Konwertuje ona także formuły LTL do automatów Büchiego.
 Napisana została w języku Java z wykorzystaniem frameworka Spring.
 Interfejs implementowany przez LV opisuje listing \ref{lst:ltl_verifier_interface}.
 
-\begin{lstlisting}[caption={Interfejs implementowany przez LV.},captionpos=b,label={lst:ltl_verifier_interface}]
+\begin{lstlisting}[caption={Interfejs implementowany przez LV.},captionpos=b,label={lst:ltl_verifier_interface},language=Java]
 
   public interface LtlVerifier {
     VerificationId initializeVerification(VerificationInit verificationInit);
@@ -66,7 +66,7 @@ Zapytania GB do LV realizowane są poprzez protokół HTTP w formacie JSON.
 Alvis to język formalny, którego celem jest dostarczenie elastyczności w modelowaniu systemów współbieżnych i czasu rzeczywistego wraz z możliwością weryfikacji opartej o metody formalne.
 Jego nazwa pochodzi od połączenia słów \textbf{al}gebra i \textbf{vis}ual.
 To łatwy w użyciu dla inżynierów formalny język modelowania.
-Oferuje także język wizualny do projektowania struktur.
+Oferuje także język wizualny do projektowania połączeń między współbieżnymi elementami systemu.
 Za pomocą Alvisa modelować można systemy współbieżne, czasu rzeczywistego, wbudowane oraz rozproszone.
 
 Model Alvisa to system agentów, które zazwyczaj działają współbieżnie, komunikują się między sobą, konkurują o współdzielone zasoby itp.

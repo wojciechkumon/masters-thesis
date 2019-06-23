@@ -1,13 +1,13 @@
 \chapter{Rozproszona implementacja}
 
 Opisany algorytm dostosowany został do środowiska rozproszonego.
-Taka implementacja pozwala uzyskać wysoką wydajność całego systemu, który staje się skalowany.
+Taka implementacja pozwala uzyskać wysoką wydajność całego systemu, który staje się skalowalny.
 Osiąga się to poprzez horyzontalne replikowanie aplikacji, która obsługuje weryfikację modelową.
 Uruchomione zostaje wiele instancji tego samego serwisu.
 
 Dzięki jego bezstanowości (żadnych danych sesyjnych, które przechowywane są w pamięci pomiędzy zapytaniami do serwera) nie ma znaczenia, która replika obsłuży żądanie.
 Każda wykona je identycznie, a cały stan odczytywany i umieszczany jest z wykorzystaniem bazy danych.
-W środowisku chmurowym system może być dynamicznie dostosowywane do aktualnych potrzeb, aby zapewnić szybkość, ale także nie marnować zasobów.
+W środowisku chmurowym system może być dynamicznie dostosowywany do aktualnych potrzeb, aby zapewnić szybkość, ale także nie marnować zasobów.
 
 Poniżej przedstawiony zostanie opis zrealizowanego systemu.
 
@@ -35,7 +35,7 @@ Linie odwołujące się do \textit{verificationService} sprowadzają się wykona
 Kod prezentujący funkcjonalność realizowaną przez GB znajduje się w listingu \ref{lst:GB_pseudocode}.
 
 \begin{minipage}{\linewidth}
-\begin{lstlisting}[caption={Kod algorytmu realizowanego przez GB w języku Java.},captionpos=b,label={lst:GB_pseudocode}]
+\begin{lstlisting}[caption={Kod algorytmu realizowanego przez GB w języku Java.},captionpos=b,label={lst:GB_pseudocode},language=Java]
 public VerificationState checkModel() {
   Collection<SystemState> states = initialStates.initialStates();
   List<StoredSystemState> saved = store.save(states).getNewlyStoredStates();
@@ -133,7 +133,7 @@ Biblioteka wymagała zaadaptowania do potrzeb projektu.
 Wyodrębniona została funkcja konwertująca formułę do grafu (listing \ref{lst:formula_to_graph}).
 
 \begin{minipage}{\linewidth}
-\begin{lstlisting}[caption={Funkcja konwertująca formułę LTL do grafu.},captionpos=b,label={lst:formula_to_graph}]
+\begin{lstlisting}[caption={Funkcja konwertująca formułę LTL do grafu.},captionpos=b,label={lst:formula_to_graph},language=Java]
   <T> Graph<T> ltlToBuchiAutomaton(Formula<T> formula) {
     val optimizedFormula = new Rewriter<>(formula).rewrite();
     Graph<T> gba = Translator.translate(optimizedFormula);
@@ -185,7 +185,7 @@ Mieści się tutaj również funkcja, która przyjmuje formułę, neguje ją ora
 Kod prezentujący powyższą funkcjonalność znajduje się w listingu \ref{lst:ltl_automaton}.
 
 \begin{minipage}{\linewidth}
-\begin{lstlisting}[caption={Implementacja automatu Büchiego.},captionpos=b,label={lst:ltl_automaton}]
+\begin{lstlisting}[caption={Implementacja automatu Büchiego.},captionpos=b,label={lst:ltl_automaton},language=Java]
 public class BuchiAutomaton<T> {
   private final Graph<Matcher<T>> buchiAutomaton;
   private final Node<Matcher<T>> currentNode;
@@ -234,13 +234,13 @@ public class BuchiAutomaton<T> {
 
 \section{Weryfikator LTL}
 
-Najważniejsza część algorytmu znajduje się w LV.
+Najważniejsza część algorytmu znajduje się module LV.
 To bezstanowa aplikacja serwerowa, która wystawia interfejs przez protokół HTTP.
 Możliwe są trzy typy zapytań:
 \begin{itemize}
-\item Inicjujące - przyjmuje stany początkowe oraz formułę do sprawdzenia, po czym inicjuje algorytm. Ponadto zwraca \textit{VerificationId}, czyli identyfikator weryfikacji, który będzie potrzebny w kolejnych zapytaniach.
-\item Odbierające kolejne stany systemu - to element weryfikacji w locie, która może się zakończyć na tym etapie. W takim przypadku zwracana jest stosowana informacja do klienta. To jedyne zapytanie, które wykonuje się wielokrotnie dla jednej formuły (ilość zależna od wielkości grafu ze stanami systemu).
-\item Finalizujące weryfikację - wykorzystywane, kiedy cały graf stanów został zeksplorowany, a formuła jest spełniona lub zastosowana heurystyka nie znalazła kontrprzykładu. Wykonana zostaje pozostała część algorytmu.
+\item Inicjujące -- przyjmuje stany początkowe oraz formułę do sprawdzenia, po czym inicjuje algorytm. Ponadto zwraca \textit{VerificationId}, czyli identyfikator weryfikacji, który będzie potrzebny w kolejnych zapytaniach.
+\item Odbierające kolejne stany systemu -- to element weryfikacji w locie, która może się zakończyć na tym etapie. W takim przypadku zwracana jest stosowana informacja do klienta. To jedyne zapytanie, które wykonuje się wielokrotnie dla jednej formuły (ilość zależna od wielkości grafu ze stanami systemu).
+\item Finalizujące weryfikację -- wykorzystywane, kiedy cały graf stanów został zeksplorowany, a formuła jest spełniona lub zastosowana heurystyka nie znalazła kontrprzykładu. Wykonana zostaje pozostała część algorytmu.
 \end{itemize}
 
 Wszystkie elementy algorytmu, które należy współdzielić pomiędzy zapytaniami, przechowywane są w bazie danych.
@@ -255,7 +255,7 @@ Ponadto stany systemu trafią do zbioru stanów poprzedzających cykl.
 W listingu \ref{lst:initializeModelChecking} znajduje się kod implementujący tę funkcjonalność.
 
 \begin{minipage}{\linewidth}
-\begin{lstlisting}[caption={Kod obsługujący inicjację weryfikacji modelowej.},captionpos=b,label={lst:initializeModelChecking}]
+\begin{lstlisting}[caption={Kod obsługujący inicjację weryfikacji modelowej.},captionpos=b,label={lst:initializeModelChecking},language=Java]
 
 public VerificationId initializeModelChecking(BuchiAutomaton<SystemState> automaton,
                                               List<String> initialStateHashes) {
@@ -288,7 +288,7 @@ Można było zastosować to podejście, ponieważ nie ma tu żadnej operacji, kt
 Wszystkie działania są rozłączne.
 
 \begin{minipage}{\linewidth}
-\begin{lstlisting}[caption={Implementacja heurystyki pozwalającej na weryfikację modelową w locie.},captionpos=b,label={lst:checkNewStates}]
+\begin{lstlisting}[caption={Implementacja heurystyki pozwalającej na weryfikację modelową w locie.},captionpos=b,label={lst:checkNewStates},language=Java]
 public boolean checkNewStates(NewStates newStates, VerificationId verificationId) {
   String sourceStateHash = newStates.getSourceStateHash();
   val storedBuchiAutomaton = findSavedBuchiAutomaton(verificationId,
@@ -326,9 +326,9 @@ private boolean runMapAlgorithm(String sourceStateHash,
 \end{minipage}
 
 Dla każdego stanu uzyskuje się odpowiadający mu automat Büchiego (aplikując stan systemu do automatu źródłowego).
-Kolejny krok to dodanie do zbioru stanów poprzedzających cykl, po czym następuje kluczowy moment, czyli heurystyka oparta na algorytmie MAP.
+Kolejny krok to dodanie do zbioru stanów poprzedzających cykl, po czym następuje kluczowy moment, czyli zastosowanie heurystyki opartej na algorytmie MAP.
 W przypadku wierzchołka akceptującego sprawdza się, czy nie został zamknięty cykl akceptujący.
-Gdy do tego dojdzie, następuje zakończenie algorytmu, poinformowanie o tym klienta oraz wypisanie całej ścieżki od liścia do korzenia, która spowodowała niespełnienie zadanej formuły LTL. Całość działa to zgodnie z opisem w sekcji \ref{heuristic}.
+Gdy do tego dojdzie, następuje zakończenie algorytmu, poinformowanie o tym klienta oraz wypisanie całej ścieżki od liścia do korzenia, która spowodowała niespełnienie zadanej formuły LTL. Całość działa zgodnie z opisem w sekcji \ref{heuristic}.
 
 W pozostałych przypadkach (kiedy nie wykryto akceptującego cyklu) obliczane są kolejne wartości dla algorytmu MAP. Implementacja została zawarta w listingu \ref{lst:checkNewStates}.
 
@@ -344,13 +344,13 @@ Przedstawia to listing \ref{lst:finishAlgorithm}.
 
 Ze zbioru najpierw usuwane są stany nieakceptujące, po czym dodaje się do niego następniki pozostałych oraz ustala wartości liczby poprzedników (listing \ref{lst:eliminateNoAcceptingStates}).
 
-Druga wykorzystywana funkcja to \textit{eliminateNoPredecessors} - jej implementacja znajduje się w listing \ref{lst:eliminateNoPredecessorsStates}.
+Druga wykorzystywana funkcja to \textit{eliminateNoPredecessors} -- jej implementacja znajduje się w listing \ref{lst:eliminateNoPredecessorsStates}.
 Jej zadanie polega na usunięciu ze zbioru wszystkich stanów, które nie mają poprzedników.
 Co więcej, dla następników takich stanów, zmniejszana jest ich liczba poprzedników.
 Jeśli spadnie ona do zera, całość powtarza się rekurencyjnie.
 
 \begin{minipage}{\linewidth}
-\begin{lstlisting}[caption={Kod obsługujący algorytm w przypadku, gdy nie zakończy się wcześniej.},captionpos=b,label={lst:finishAlgorithm}]
+\begin{lstlisting}[caption={Kod obsługujący algorytm w przypadku, gdy nie zakończy się wcześniej.},captionpos=b,label={lst:finishAlgorithm},language=Java]
 public boolean finishAlgorithm(VerificationId verificationId) {
   int oldSize = Integer.MAX_VALUE;
   while (true) {
@@ -368,7 +368,7 @@ public boolean finishAlgorithm(VerificationId verificationId) {
 \end{minipage}
 
 \begin{minipage}{\linewidth}
-\begin{lstlisting}[caption={Implementacja funkcji usuwającej stany nieakceptujące ze zbioru.},captionpos=b,label={lst:eliminateNoAcceptingStates}]
+\begin{lstlisting}[caption={Implementacja funkcji usuwającej stany nieakceptujące ze zbioru.},captionpos=b,label={lst:eliminateNoAcceptingStates},language=Java]
 private void eliminateNoAccepting(String verificationId) {
   Queue<String> hashesQueue = new ArrayDeque<>();
   approximationSetService.streamAllStateHashes(verificationId)
@@ -395,7 +395,7 @@ private void eliminateNoAccepting(String verificationId) {
 \end{lstlisting}
 \end{minipage}
 \begin{minipage}{\linewidth}
-\begin{lstlisting}[caption={Implementacja funkcji usuwającej stany niemające poprzedników ze zbioru.},captionpos=b,label={lst:eliminateNoPredecessorsStates}]
+\begin{lstlisting}[caption={Implementacja funkcji usuwającej stany niemające poprzedników ze zbioru.},captionpos=b,label={lst:eliminateNoPredecessorsStates},language=Java]
 private void eliminateNoPredecessors(String verificationId) {
   Queue<String> hashesQueue = new ArrayDeque<>();
   approximationSetService.streamAllStateHashes(verificationId)

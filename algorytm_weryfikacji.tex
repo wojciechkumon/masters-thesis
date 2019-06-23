@@ -1,4 +1,4 @@
-\chapter{Algorytm weryfikacji}
+\chapter{Algorytm weryfikacji} \label{chap:model_checking_algorithm}
 
 Zastosowany algorytm weryfikacji modelowej opiera się głównie na \textit{on-the-fly OWCTY} \cite{Bar12}, który został dostosowany do wykorzystania w środowisku rozproszonym.
 
@@ -25,7 +25,7 @@ Zapewnia liniową złożoność czasową przy jednoczesnym uniknięciu przeszuki
 Niestety procedura sortowania topologicznego nie może bezpośrednio wykryć cykli akceptujących.
 Zamiast tego wykorzystuje się eliminację cykli nieakceptujących.
 Obliczany jest zbiór stanów poprzedzanych przez cykl akceptujący (\textit{approximationSet}).
-Jeśli po zakończeniu algorytmu zbiór ten jest pusty, nie ma cyklu akceptującego.
+Jeśli po zakończeniu algorytmu zbiór ten jest pusty, oznacza  to, że nie istnieje cykl akceptujący.
 Sam zbiór wylicza się w kilku fazach.
 Pierwsza z nich, czyli \textit{initialise()} (algorytm \ref{alg:initialise}) eksploruje pełną przestrzeń stanów systemu oraz przygotowuje niezbędne dane dla kolejnych faz.
 Kolejne dwie usuwają ze zbioru stany, które nie mogą być częścią cyklu akceptującego.
@@ -45,10 +45,10 @@ Brak takich następników oznacza zakończenie fazy.
 \noindent
 Opis użytych zmiennych/procedur w algorytmach \ref{alg:detectAcceptingCycle} i \ref{alg:initialise}:
 \begin{itemize}
-\item $ G = (V,E,ACC) $ - wejściowy graf składający się ze zbiorów wierzchołków, krawędzi i stanów akceptujących
-\item \textit{getInitialStates()} - procedura zwracająca zbiór stanów początkowych dla grafu $G$
-\item \textit{isAccepting(x)} - zwraca prawdę, jeśli stan $x$ jest akceptujący, fałsz w przeciwnym wypadku
-\item \textit{acceptingCycleFound()} - służy do wcześniejszego zakończenia algorytmu (kiedy cykl akceptujący został wykryty bez eksploracji całej przestrzeni stanów)
+\item $ G = (V,E,ACC) $ -- wejściowy graf składający się ze zbiorów wierzchołków, krawędzi i stanów akceptujących
+\item \textit{getInitialStates()} -- procedura zwracająca zbiór stanów początkowych dla grafu $G$
+\item \textit{isAccepting(x)} -- zwraca prawdę, jeśli stan $x$ jest akceptujący, fałsz w przeciwnym wypadku
+\item \textit{acceptingCycleFound()} -- służy do wcześniejszego zakończenia algorytmu (kiedy cykl akceptujący został wykryty bez eksploracji całej przestrzeni stanów)
 \end{itemize}
 
 \begin{algorithm}
@@ -123,11 +123,11 @@ Zgodnie z działaniem algorytmu MAP, na stan akceptujący do rozpropagowania wyb
 \end{algorithm}
 
 Faza inicjacji algorytmu OWCTY wymaga eksploracji całej przestrzeni stanów, więc została użyta do wykonania detekcji cykli, wykorzystując propagację maksymalnego akceptującego stanu.
-W przeciwieństwie do algorytmu MAP brakuje to repropagacji, aby złożoność obliczeniowa pozostała i liniowa i była proporcjonalna do rozmiaru grafu.
-Skutek tego ograniczenia to brak wykrywalności wszystkich cykli (stąd to heurystyka).
+W przeciwieństwie do algorytmu MAP brakuje tu repropagacji, aby złożoność obliczeniowa pozostała i liniowa i była proporcjonalna do rozmiaru grafu.
+Skutek tego ograniczenia to brak wykrywalności wszystkich cykli (stąd klasyfikacja tej fazy jako heurystyka).
 
 \noindent
-Wyróżnić można dwa podstawowe powody, kiedy metoda ta będzie nieskuteczna (pominie cykl):
+Wyróżnić można dwa podstawowe przypadki, kiedy metoda ta będzie nieskuteczna w wykryciu istniejącego cyklu akceptującego:
 \begin{enumerate}
   \item Maksymalny akceptujący poprzednik nie leży wewnątrz cyklu.
   \item Wartość maksymalnego akceptującego poprzednika nie wróci do źródła, mimo że cykl istnieje.
@@ -166,8 +166,8 @@ Przykłady z rys. \ref{fig:alg_heuristic_examples}:
 \begin{enumerate}[label=(\alph*)]
 \item Przypadek trywialny (jeden stan akceptujący). Wartość $B$ zostanie rozpropagowana do $C$ i $D$. W wyniku tego $B$ powróci do węzła źródłowego, więc cykl zostanie wykryty.
 \item W tej sytuacji także nastąpi wykrycie cyklu, jednak po drodze występuje kilka stanów akceptujących. Ponieważ $ B > C \land B > D $, $B$ zostanie przesłane dalej.
-\item Przypadek podobny do poprzedniego, lecz krawędź powrotna skierowana jest w $C$ (zamiast w $B$). Efekt tej zmiany to umiejscowienie największego akceptującego poprzednika poza cyklem ($ B > C \land B > D $). Taki cykl zostanie pominięty przez zastosowaną heurystykę (1. podstawowy powód).
-\item Maksymalny akceptujący poprzednik znajduje się w cyklu, jednak to nie on go zaczyna. Próba propagacji wartości $C$ do $B$ zakończy się fiaskiem, ponieważ $ C < B $. Dalej $B$ przekazane zostanie do $B$. W wyniku tego porównuje się ze sobą obecną wartość $D$ ze stanem, do którego wraca krawędź. $ B \neq C $, więc do wykrycia cyklu nie dojdzie.
+\item Przypadek podobny do poprzedniego, lecz krawędź powrotna skierowana jest w $C$ (zamiast w $B$). Efekt tej zmiany to umiejscowienie największego akceptującego poprzednika poza cyklem. Mimo że wewnątrz cyklu są stany akceptujące, to nie zostają one spropagowane, bo wartość $B$ jest większa ($ B > C \land B > D $). Taki cykl zostanie pominięty przez zastosowaną heurystykę (1. podstawowy powód).
+\item Maksymalny akceptujący poprzednik znajduje się w cyklu, jednak to nie on go zaczyna. Próba propagacji wartości $C$ do $B$ zakończy się fiaskiem, ponieważ $ C < B $. Dalej $B$ przekazane zostanie do $D$. W wyniku tego porównuje się ze sobą obecną wartość $D$ ze stanem, do którego wraca krawędź. $ B \neq C $, więc do wykrycia cyklu nie dojdzie.
 \end{enumerate}
 
 
@@ -277,7 +277,7 @@ Niestety nie działa ona w locie, więc potrzebuje wygenerowanej całej przestrz
 
 Ustalenie, kiedy algorytm zadziała w locie, przedstawia rys. \ref{fig:on_the_fly_diagram}.
 Kluczowe pytanie to czy graf zawiera wykrywalny przez heurystykę cykl akceptujący.
-Jeśli tak, wtedy z cała procedura zakończy się wcześnie (bez eksploracji wszystkich wierzchołków, a zaraz po zamknięciu się cyklu).
+Jeśli tak, wtedy cała procedura zakończy się wcześnie (bez eksploracji wszystkich wierzchołków, a zaraz po domknięciu się cyklu).
 
 W przypadku grafu posiadającego cykl akceptujący, który zostanie pominięty (zgodnie z dwoma powodami opisanymi w sekcji \ref{heuristic}), dojdzie do pełnego przeszukania, aby go wykryć (brak działania w locie).
 Niespełnienie formuły zawsze implikuje przegląd wszystkich wierzchołków grafu.
