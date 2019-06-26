@@ -50,7 +50,7 @@ Weryfikacji podlega również kolejność zdarzeń w czasie, np. czy system zaws
 \end{figure}
 
 \noindent
-Kategorie właściwości współbieżnego systemu:
+Kategorie właściwości współbieżnego systemu \cite{Bai08}:
 \begin{itemize}
 \item osiągalność (niemożliwe jest zakleszczenie)
 \item bezpieczeństwo (coś niepożądanego nigdy nie wystąpi \cite{Alp87})
@@ -189,7 +189,7 @@ Algorytm weryfikacji formuły LTL $\varphi$ w systemie tranzycyjnym $TS$ wygląd
 \end{enumerate}
 
 \noindent
-$TS_1 \otimes TS_2$ -- iloczyn synchroniczny (ang. \textit{synchronous product}) oznacza system tranzycyjny, którego składowe systemy tranzycyjne ($TS_1$ i $TS_2$) wykonują wszystkie akcje synchroniczne, bez ich pomijania przez którykolwiek składowy system tranzycyjny.
+$TS \otimes A$ -- iloczyn synchroniczny (ang. \textit{synchronous product}) oznacza system tranzycyjny, którego składowe systemy tranzycyjne ($TS$ i $A$) wykonują wszystkie akcje synchronicznie, bez ich pomijania przez którykolwiek składowy system tranzycyjny \cite{Bai08}.
 
 
 Sam schemat przedstawiający jak działa weryfikacja modelowa, kiedy wykorzystujemy logikę LTL do opisu właściwości, znajduje się na rys. \ref{fig:ltl_model_checking}.
@@ -224,14 +224,14 @@ Faktem jest, że problem takiego przeszukiwania jest P-zupełny, więc skalowany
 Celem algorytmu weryfikacji modelowej jest eksploracja stanów systemu wraz z synchronicznym wykonywaniem tranzycji w automacie Büchiego (odwzorowującym zadaną formułę LTL).
 Znalezienie stanu akceptującego dla automatu Büchiego nie oznacza jeszcze sukcesu.
 Należy znaleźć taki cykl w systemie tranzycyjnym, aby znajdował się w nim stan akceptujący (zgodnie z definicją automatu Büchiego) -- wtedy formuła została spełniona.
-Zadanie algorytmów sprowadza się więc do wyszukiwania cykli akceptujących.
+Zadanie algorytmów sprowadza się więc do wyszukiwania cykli zawierających przynajmniej jeden stan akceptujący wskazany przez automat Büchiego - cykli akceptujących.
 
 Algorytmem wartym uwagi jest \textit{on-the-fly OWCTY} \cite{Bar12}.
 Opiera on się na algorytmie OWCTY (ang. \textit{One Way Catch Them Young}) \cite{Cer03} oraz MAP (ang. \textit{Maximal Accepting Predecessor}) \cite{Bri04}.
 Co więcej, pozwala na zrównoleglenie obliczeń.
 
-OWCTY nie polega na przeszukiwaniu wstecznym DFS, dzięki czemu możliwe jest jego zrównoleglenie.
-Niestety procedura sortowania topologicznego nie wykrywa cykli akceptujących wprost.
+OWCTY nie polega na przeszukiwaniu post-order DFS, dzięki czemu możliwe jest jego zrównoleglenie.
+Procedura sortowania topologicznego oparta na BFS, niestety nie wykrywa cykli akceptujących wprost.
 Algorytm skupia się na eliminowaniu cykli nieakceptujących. 
 Wyliczany i przechowywany jest zbiór stanów poprzedzających akceptujący cykl.
 Jeśli po zakończeniu algorytmu zbiór ten okaże się pusty, oznacza to, że nie ma cyklu akceptującego.
