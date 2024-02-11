@@ -1,6 +1,6 @@
 # Master’s thesis
 
-The repository contains both LaTex sources and the final PDF (`praca.pdf`).
+The repository contains both LaTex sources and the final PDF (`Master’s thesis.pdf`).
 
 
 ### English title
